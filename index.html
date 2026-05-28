@@ -420,6 +420,33 @@ label.field-label {
   .form-col-2, .form-col-3 { grid-template-columns: 1fr; }
 }
 
+
+/* ===== MEMBER PAGES ===== */
+.request-status-pending  { background:#fef3c7; color:#92400e; }
+.request-status-approved { background:#d1fae5; color:#065f46; }
+.request-status-rejected { background:#fee2e2; color:#991b1b; }
+.pengumuman-card {
+  background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+  border-radius: var(--radius-lg); padding: 1rem 1.3rem;
+  color: white; display: flex; align-items: flex-start; gap: .8rem;
+  margin-bottom: .6rem;
+}
+.pengumuman-card.info   { background: linear-gradient(135deg,#0284c7,#075985); }
+.pengumuman-card.warn   { background: linear-gradient(135deg,#d97706,#92400e); }
+.pengumuman-card.sukses { background: linear-gradient(135deg,#059669,#065f46); }
+.pengumuman-card-body { flex:1; }
+.pengumuman-card-title { font-weight:700; font-size:.85rem; margin-bottom:.2rem; }
+.pengumuman-card-text  { font-size:.78rem; opacity:.85; line-height:1.5; }
+.pengumuman-card-date  { font-size:.68rem; opacity:.55; margin-top:.3rem; }
+/* Admin: request approval panel */
+.req-item {
+  border: 1.5px solid var(--gray-200); border-radius: var(--radius-md);
+  padding: .9rem 1rem; margin-bottom: .6rem;
+}
+.req-item.pending  { border-left: 4px solid var(--warning); }
+.req-item.approved { border-left: 4px solid var(--success); }
+.req-item.rejected { border-left: 4px solid var(--danger); }
+
 /* ===== HIDDEN UTIL ===== */
 .hidden { display: none !important; }
 .flex { display: flex; }
@@ -513,6 +540,13 @@ label.field-label {
       <div class="nav-item" onclick="Nav.go('laporan',this)"><i data-lucide="file-spreadsheet" class="nav-icon"></i> Ekspor & Cetak</div>
     </div>
     <div class="nav-section">
+      <div class="nav-section-title">Pengajuan</div>
+      <div class="nav-item" onclick="Nav.go('requests',this)">
+        <i data-lucide="inbox" class="nav-icon"></i> Kelola Request
+        <span class="nav-badge" id="badge-admin-req" style="display:none;"></span>
+      </div>
+    </div>
+    <div class="nav-section">
       <div class="nav-section-title">Sistem</div>
       <div class="nav-item" onclick="Nav.go('users',this)"><i data-lucide="user-cog" class="nav-icon"></i> Kelola User</div>
       <div class="nav-item" onclick="Nav.go('settings',this)"><i data-lucide="settings" class="nav-icon"></i> Pengaturan</div>
@@ -521,7 +555,20 @@ label.field-label {
 
   <div id="menu-anggota" class="hidden">
     <div class="nav-section">
-      <div class="nav-item active" onclick="Nav.go('member-home',this)"><i data-lucide="user-circle" class="nav-icon"></i> Dasbor Saya</div>
+      <div class="nav-section-title">Akun Saya</div>
+      <div class="nav-item active" onclick="Nav.go('member-home',this)"><i data-lucide="layout-dashboard" class="nav-icon"></i> Dasbor</div>
+      <div class="nav-item" onclick="Nav.go('member-riwayat',this)"><i data-lucide="clock" class="nav-icon"></i> Riwayat Transaksi</div>
+    </div>
+    <div class="nav-section">
+      <div class="nav-section-title">Pengajuan</div>
+      <div class="nav-item" onclick="Nav.go('member-request',this)">
+        <i data-lucide="send" class="nav-icon"></i> Ajukan Request
+        <span class="nav-badge" id="badge-req" style="display:none;">!</span>
+      </div>
+    </div>
+    <div class="nav-section">
+      <div class="nav-section-title">Pengaturan</div>
+      <div class="nav-item" onclick="Nav.go('member-profil',this)"><i data-lucide="user-pen" class="nav-icon"></i> Profil & Password</div>
     </div>
   </div>
 
@@ -897,6 +944,35 @@ label.field-label {
       </div>
     </div>
 
+
+    <!-- ========= ADMIN: KELOLA REQUEST ========= -->
+    <div class="page" id="page-requests">
+      <div class="page-inner">
+        <div class="card">
+          <div class="card-header">
+            <div>
+              <span class="card-title">Kelola Pengajuan Anggota</span>
+              <div class="card-subtitle" id="req-count-info">0 pending</div>
+            </div>
+            <div class="flex gap-2">
+              <select id="req-filter-status" onchange="AdminReq.render()" style="width:auto;font-size:.8rem;">
+                <option value="semua">Semua Status</option>
+                <option value="pending">Menunggu</option>
+                <option value="approved">Disetujui</option>
+                <option value="rejected">Ditolak</option>
+              </select>
+              <select id="req-filter-type" onchange="AdminReq.render()" style="width:auto;font-size:.8rem;">
+                <option value="semua">Semua Jenis</option>
+                <option value="penarikan">Penarikan</option>
+                <option value="ubah_rekening">Ubah Rekening</option>
+              </select>
+            </div>
+          </div>
+          <div id="req-list-admin"></div>
+        </div>
+      </div>
+    </div>
+
     <!-- ========= USERS ========= -->
     <div class="page" id="page-users">
       <div class="page-inner">
@@ -987,22 +1063,181 @@ label.field-label {
     <!-- ========= MEMBER HOME ========= -->
     <div class="page" id="page-member-home">
       <div class="page-inner">
+
+        <!-- Pengumuman Banner -->
+        <div id="m-pengumuman-wrap" style="margin-bottom:1rem;"></div>
+
+        <!-- Stat Cards -->
         <div class="stats-grid">
-          <div class="stat-card" style="--stat-color:var(--primary)"><div class="stat-label">Total Saldo Saya</div><div class="stat-value" id="m-total">Rp 0</div></div>
+          <div class="stat-card" style="--stat-color:var(--primary)"><div class="stat-label">Total Saldo Saya</div><div class="stat-value" id="m-total">Rp 0</div><div class="stat-sub">Pokok + Wajib + Sukarela</div></div>
           <div class="stat-card" style="--stat-color:var(--success)"><div class="stat-label">Simpanan Pokok</div><div class="stat-value" id="m-pokok">Rp 0</div></div>
           <div class="stat-card" style="--stat-color:var(--info)"><div class="stat-label">Simpanan Sukarela</div><div class="stat-value" id="m-sukarela">Rp 0</div></div>
-          <div class="stat-card" style="--stat-color:var(--accent)"><div class="stat-label">Total Wajib Lunas</div><div class="stat-value" id="m-wajib">0 bln</div></div>
+          <div class="stat-card" style="--stat-color:var(--accent)"><div class="stat-label">Wajib Lunas</div><div class="stat-value" id="m-wajib">0 bln</div></div>
         </div>
-        <div class="card">
+
+        <!-- Wajib Bulanan -->
+        <div class="card" style="margin-bottom:1rem;">
           <div class="card-header">
             <span class="card-title">Status Simpanan Wajib</span>
-            <select id="m-year" onchange="Features.renderMemberHome()" style="width:auto;font-size:.8rem;"></select>
+            <select id="m-year" onchange="Member.renderHome()" style="width:auto;font-size:.8rem;"></select>
           </div>
           <div class="table-wrap">
             <table id="tbl-m-wajib" style="text-align:center;">
               <thead><tr><th>Jan</th><th>Feb</th><th>Mar</th><th>Apr</th><th>Mei</th><th>Jun</th><th>Jul</th><th>Agu</th><th>Sep</th><th>Okt</th><th>Nov</th><th>Des</th></tr></thead>
               <tbody></tbody>
             </table>
+          </div>
+        </div>
+
+        <!-- Info Rekening & Request Cepat -->
+        <div class="grid-2">
+          <div class="card">
+            <div class="card-header"><span class="card-title">Info Rekening Saya</span></div>
+            <div id="m-rekening-info" style="font-size:.85rem;line-height:2;color:var(--gray-700);"></div>
+          </div>
+          <div class="card" style="background:var(--primary-light);border-color:rgba(26,86,219,.2);">
+            <div class="card-header"><span class="card-title" style="color:var(--primary);">Aksi Cepat</span></div>
+            <div style="display:flex;flex-direction:column;gap:.6rem;">
+              <button class="btn btn-primary w-full" onclick="Member.openRequest('penarikan')">
+                <i data-lucide="arrow-down-to-line"></i> Ajukan Penarikan Simpanan
+              </button>
+              <button class="btn btn-ghost w-full" onclick="Member.openRequest('ubah_rekening')">
+                <i data-lucide="credit-card"></i> Ubah Data Rekening
+              </button>
+              <button class="btn btn-ghost w-full" onclick="Nav.go('member-profil', document.querySelector('[onclick*="member-profil"]'))">
+                <i data-lucide="key-round"></i> Ganti Password
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ========= MEMBER RIWAYAT ========= -->
+    <div class="page" id="page-member-riwayat">
+      <div class="page-inner">
+        <div class="card" style="margin-bottom:1rem;">
+          <div class="card-header">
+            <span class="card-title">Riwayat Transaksi Saya</span>
+            <select id="m-riwayat-filter" onchange="Member.renderRiwayat()" style="width:auto;font-size:.8rem;">
+              <option value="semua">Semua Jenis</option>
+              <option value="Pokok">Simpanan Pokok</option>
+              <option value="Wajib">Simpanan Wajib</option>
+              <option value="Sukarela">Simpanan Sukarela</option>
+            </select>
+          </div>
+          <div class="table-wrap">
+            <table id="tbl-m-riwayat">
+              <thead><tr><th>Tanggal</th><th>Jenis</th><th class="text-right">Nominal</th></tr></thead>
+              <tbody></tbody>
+            </table>
+          </div>
+          <div id="m-riwayat-total" style="text-align:right;padding:.8rem 1rem 0;font-size:.85rem;font-weight:700;color:var(--primary);"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ========= MEMBER REQUEST ========= -->
+    <div class="page" id="page-member-request">
+      <div class="page-inner">
+        <!-- Form Pengajuan -->
+        <div class="grid-2" style="margin-bottom:1rem;">
+          <!-- Pengajuan Penarikan -->
+          <div class="card">
+            <div class="card-header"><span class="card-title">Ajukan Penarikan Simpanan</span></div>
+            <div style="background:var(--warning-light);border-radius:var(--radius-md);padding:.75rem .9rem;margin-bottom:.9rem;font-size:.78rem;color:#92400e;">
+              <b>Catatan:</b> Penarikan memerlukan persetujuan admin. Pengurus akan menghubungi Anda untuk konfirmasi.
+            </div>
+            <form onsubmit="Member.submitRequest(event,'penarikan')">
+              <div class="field-group">
+                <label class="field-label">Jenis Simpanan yang Ditarik</label>
+                <select id="req-tarik-jenis" required>
+                  <option value="Sukarela">Simpanan Sukarela</option>
+                  <option value="Pokok">Simpanan Pokok</option>
+                </select>
+              </div>
+              <div class="field-group">
+                <label class="field-label">Nominal yang Diajukan (Rp)</label>
+                <input type="number" id="req-tarik-nom" required placeholder="Contoh: 500000">
+              </div>
+              <div class="field-group">
+                <label class="field-label">Alasan / Keterangan</label>
+                <textarea id="req-tarik-ket" rows="2" required placeholder="Contoh: keperluan biaya sekolah"></textarea>
+              </div>
+              <button class="btn btn-warning w-full" type="submit"><i data-lucide="send"></i> Kirim Pengajuan</button>
+            </form>
+          </div>
+
+          <!-- Pengajuan Ubah Rekening -->
+          <div class="card">
+            <div class="card-header"><span class="card-title">Ajukan Perubahan Rekening</span></div>
+            <div style="background:var(--info-light);border-radius:var(--radius-md);padding:.75rem .9rem;margin-bottom:.9rem;font-size:.78rem;color:#075985;">
+              <b>Catatan:</b> Perubahan data rekening akan diverifikasi oleh admin sebelum diterapkan.
+            </div>
+            <form onsubmit="Member.submitRequest(event,'ubah_rekening')">
+              <div class="form-row form-col-2">
+                <div class="field-group"><label class="field-label">Nama Bank Baru</label><input type="text" id="req-rek-bank" required placeholder="Contoh: BRI"></div>
+                <div class="field-group"><label class="field-label">No. Rekening Baru</label><input type="text" id="req-rek-no" required placeholder="Contoh: 1234567890"></div>
+              </div>
+              <div class="field-group">
+                <label class="field-label">Nama Pemilik Rekening</label>
+                <input type="text" id="req-rek-nama" required placeholder="Sesuai buku tabungan">
+              </div>
+              <div class="field-group">
+                <label class="field-label">Alasan Perubahan</label>
+                <textarea id="req-rek-ket" rows="2" placeholder="Contoh: ganti bank, rekening lama ditutup"></textarea>
+              </div>
+              <button class="btn btn-info w-full" type="submit"><i data-lucide="send"></i> Kirim Pengajuan</button>
+            </form>
+          </div>
+        </div>
+
+        <!-- Riwayat Request Saya -->
+        <div class="card">
+          <div class="card-header"><span class="card-title">Riwayat Pengajuan Saya</span></div>
+          <div class="table-wrap">
+            <table id="tbl-m-requests">
+              <thead><tr><th>Tanggal</th><th>Jenis</th><th>Detail</th><th>Status</th></tr></thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ========= MEMBER PROFIL ========= -->
+    <div class="page" id="page-member-profil">
+      <div class="page-inner">
+        <div class="grid-2">
+          <!-- Ganti Password -->
+          <div class="card">
+            <div class="card-header"><span class="card-title">Ganti Password Login</span></div>
+            <form onsubmit="Member.gantiPassword(event)">
+              <div class="field-group">
+                <label class="field-label">Password Lama</label>
+                <input type="password" id="m-pass-lama" required placeholder="Password saat ini">
+              </div>
+              <div class="field-group">
+                <label class="field-label">Password Baru</label>
+                <input type="password" id="m-pass-baru" required placeholder="Minimal 6 karakter">
+              </div>
+              <div class="field-group">
+                <label class="field-label">Konfirmasi Password Baru</label>
+                <input type="password" id="m-pass-konfirm" required placeholder="Ulangi password baru">
+              </div>
+              <button class="btn btn-primary w-full" type="submit"><i data-lucide="key-round"></i> Simpan Password Baru</button>
+            </form>
+          </div>
+
+          <!-- Info Profil -->
+          <div class="card">
+            <div class="card-header"><span class="card-title">Profil Saya</span></div>
+            <div id="m-profil-detail" style="font-size:.85rem;"></div>
+            <div style="margin-top:1rem;padding-top:1rem;border-top:1px solid var(--gray-200);">
+              <div style="font-size:.72rem;font-weight:700;color:var(--gray-500);text-transform:uppercase;letter-spacing:.05em;margin-bottom:.5rem;">Username Login</div>
+              <div id="m-login-info" style="font-size:.85rem;font-family:monospace;background:var(--gray-50);padding:.5rem .8rem;border-radius:var(--radius-md);color:var(--gray-700);"></div>
+              <div style="font-size:.7rem;color:var(--gray-400);margin-top:.4rem;">Gunakan username ini untuk masuk ke aplikasi</div>
+            </div>
           </div>
         </div>
       </div>
@@ -1572,8 +1807,10 @@ const Storage = {
     } catch(e) {}
     if (!S.users?.length) S.users = [{username:'admin',password:'123',role:'admin',pin:CONFIG.securityPin}];
     if (!S.features) S.features = { pinjaman:false, stok:true, roi:true };
-    if (!S.pinjaman) S.pinjaman = [];
-    if (!S.cicilan) S.cicilan = [];
+    if (!S.pinjaman)   S.pinjaman = [];
+    if (!S.cicilan)    S.cicilan = [];
+    if (!S.requests)   S.requests = [];
+    if (!S.pengumuman) S.pengumuman = [];
   }
 };
 
@@ -1690,6 +1927,7 @@ const UI = {
       role === 'viewer' ? 'Viewer' : 'Anggota';
     document.getElementById('sb-avatar').textContent = (S.user.username||'A')[0].toUpperCase();
     this.applyFeatures();
+    AdminReq.updateBadge();
     if (role === 'anggota') Nav.go('member-home', null);
     else Nav.go('dashboard', document.querySelector('[onclick*="dashboard"]'));
   },
@@ -1748,7 +1986,12 @@ const Nav = {
     if (el) el.classList.add('active');
     document.getElementById('page-title').textContent = id.replace(/-/g,' ').replace(/\b\w/g,c=>c.toUpperCase());
     document.getElementById('print-date').textContent = new Date().toLocaleDateString('id-ID',{year:'numeric',month:'long',day:'numeric'});
-    if (id === 'member-home') Features.renderMemberHome();
+    if (id === 'member-home')    Member.renderHome();
+    if (id === 'member-riwayat') Member.renderRiwayat();
+    if (id === 'member-request') Member.renderRequest();
+    if (id === 'member-profil')  Member.renderProfil();
+    if (id === 'requests')       AdminReq.render();
+    if (id === 'settings') {     Pengumuman.renderAdmin(); }
     if (id === 'settings') { Features.fetchBackups(); this._loadConnSettings(); Protection.loadDomains(); }
     Render.all();
   },
@@ -1988,6 +2231,9 @@ const Features = {
   },
 
   renderMemberHome() {
+    Member.renderHome(); // delegated to Member module
+  },
+  _renderMemberHome_legacy() {
     if (!S.user || S.user.role !== 'anggota') return;
     const id = S.user.id;
     const yr = +document.getElementById('m-year')?.value || new Date().getFullYear();
@@ -2157,6 +2403,7 @@ const Render = {
     this.dashboard(); this.anggota(); this.kas(); this.modal();
     this.stok(); this.pinjaman(); this.simpananSelects();
     Features.renderSimpanan(); Features.calcROI(); Features.renderSHUSettings();
+    AdminReq.updateBadge();
     lucide.createIcons();
   },
 
@@ -2331,6 +2578,441 @@ const Export = {
   }
 };
 
+
+// ============================================================
+// STATE EXTENSION — tambah field baru ke S
+// ============================================================
+// S.requests  = [] — pengajuan dari anggota
+// S.pengumuman = [] — pengumuman dari admin
+
+// ============================================================
+// MEMBER MODULE — semua logika halaman anggota
+// ============================================================
+const Member = {
+
+  // Render dashboard utama anggota
+  renderHome() {
+    if (!S.user || S.user.role !== 'anggota') return;
+    const id = S.user.id;
+    const yr = +(document.getElementById('m-year')?.value || new Date().getFullYear());
+    const myS = S.simpanan.filter(s => s.angId == id);
+
+    const pokok    = myS.find(s => s.jenis === 'Pokok')?.nom || 0;
+    const sukarela = myS.filter(s => s.jenis === 'Sukarela').reduce((a,b) => a+b.nom, 0);
+    const wajibTotal = myS.filter(s => s.jenis === 'Wajib').reduce((a,b) => a+b.nom, 0);
+
+    const wajibBulan = [];
+    for (let m=1; m<=12; m++) {
+      wajibBulan.push(myS.some(s => {
+        const d = new Date(s.tgl);
+        return s.jenis==='Wajib' && (d.getMonth()+1)===m && d.getFullYear()===yr;
+      }));
+    }
+
+    document.getElementById('m-total').textContent    = UI.fmt(pokok + sukarela + wajibTotal);
+    document.getElementById('m-pokok').textContent    = UI.fmt(pokok);
+    document.getElementById('m-sukarela').textContent = UI.fmt(sukarela);
+    document.getElementById('m-wajib').textContent    = wajibBulan.filter(Boolean).length + ' bln';
+
+    // Grid wajib
+    const tb = document.querySelector('#tbl-m-wajib tbody');
+    if (tb) tb.innerHTML = `<tr>${wajibBulan.map(ok =>
+      `<td class="month-cell ${ok?'month-paid':'month-unpaid'}">${ok?'✓':'-'}</td>`
+    ).join('')}</tr>`;
+
+    // Info rekening
+    const ang = S.anggota.find(a => a.id == id);
+    const rek = document.getElementById('m-rekening-info');
+    if (rek && ang) rek.innerHTML = `
+      <div style="display:flex;gap:.5rem;align-items:center;margin-bottom:.3rem;">
+        <i data-lucide="credit-card" style="width:14px;color:var(--gray-400);"></i>
+        <span style="color:var(--gray-500);font-size:.75rem;">Bank</span>
+        <span style="font-weight:600;">${ang.bank || '—'}</span>
+      </div>
+      <div style="display:flex;gap:.5rem;align-items:center;">
+        <i data-lucide="hash" style="width:14px;color:var(--gray-400);"></i>
+        <span style="color:var(--gray-500);font-size:.75rem;">No. Rekening</span>
+        <span style="font-weight:600;font-family:monospace;">${ang.rek || '—'}</span>
+      </div>`;
+
+    // Pengumuman
+    this.renderPengumuman();
+
+    lucide.createIcons();
+  },
+
+  renderPengumuman() {
+    const wrap = document.getElementById('m-pengumuman-wrap');
+    if (!wrap) return;
+    const list = (S.pengumuman || [])
+      .filter(p => p.aktif !== false)
+      .sort((a,b) => new Date(b.tgl) - new Date(a.tgl))
+      .slice(0, 3);
+
+    if (!list.length) { wrap.innerHTML = ''; return; }
+
+    wrap.innerHTML = list.map(p => `
+      <div class="pengumuman-card ${p.tipe||'info'}">
+        <i data-lucide="${p.tipe==='warn'?'alert-triangle':p.tipe==='sukses'?'check-circle':'megaphone'}"
+           style="width:18px;height:18px;flex-shrink:0;margin-top:2px;"></i>
+        <div class="pengumuman-card-body">
+          <div class="pengumuman-card-title">${p.judul}</div>
+          <div class="pengumuman-card-text">${p.isi}</div>
+          <div class="pengumuman-card-date">${p.tgl||''}</div>
+        </div>
+      </div>`).join('');
+    lucide.createIcons();
+  },
+
+  // Render riwayat transaksi
+  renderRiwayat() {
+    if (!S.user || S.user.role !== 'anggota') return;
+    const id = S.user.id;
+    const filter = document.getElementById('m-riwayat-filter')?.value || 'semua';
+    let txns = S.simpanan.filter(s => s.angId == id);
+    if (filter !== 'semua') txns = txns.filter(s => s.jenis === filter);
+    txns = txns.sort((a,b) => new Date(b.tgl) - new Date(a.tgl));
+
+    const total = txns.reduce((a,b) => a+b.nom, 0);
+    const tb = document.querySelector('#tbl-m-riwayat tbody');
+    if (tb) tb.innerHTML = txns.length
+      ? txns.map(s => `<tr>
+          <td><small>${s.tgl}</small></td>
+          <td><span class="badge ${s.jenis==='Pokok'?'badge-info':s.jenis==='Wajib'?'badge-success':'badge-warning'}">${s.jenis}</span></td>
+          <td class="text-right font-bold">${UI.fmt(s.nom)}</td>
+        </tr>`).join('')
+      : '<tr><td colspan="3" style="text-align:center;color:var(--gray-400);padding:1.5rem;">Belum ada transaksi</td></tr>';
+
+    const tot = document.getElementById('m-riwayat-total');
+    if (tot) tot.textContent = txns.length ? `Total: ${UI.fmt(total)}` : '';
+  },
+
+  // Render halaman request anggota
+  renderRequest() {
+    if (!S.user || S.user.role !== 'anggota') return;
+    const id = S.user.id;
+    const myReqs = (S.requests || [])
+      .filter(r => r.angId == id)
+      .sort((a,b) => new Date(b.tgl) - new Date(a.tgl));
+
+    const tb = document.querySelector('#tbl-m-requests tbody');
+    if (tb) tb.innerHTML = myReqs.length
+      ? myReqs.map(r => `<tr>
+          <td><small>${r.tgl}</small></td>
+          <td>${r.tipe === 'penarikan' ? 'Penarikan' : 'Ubah Rekening'}</td>
+          <td style="font-size:.78rem;">${r.detail}</td>
+          <td><span class="badge request-status-${r.status||'pending'}">
+            ${r.status==='approved'?'✓ Disetujui':r.status==='rejected'?'✗ Ditolak':'⏳ Menunggu'}
+          </span></td>
+        </tr>`).join('')
+      : '<tr><td colspan="4" style="text-align:center;color:var(--gray-400);padding:1.5rem;">Belum ada pengajuan</td></tr>';
+  },
+
+  // Render halaman profil
+  renderProfil() {
+    if (!S.user || S.user.role !== 'anggota') return;
+    const ang = S.anggota.find(a => a.id == S.user.id);
+    if (!ang) return;
+    const el = document.getElementById('m-profil-detail');
+    if (el) el.innerHTML = [
+      ['Nama',        ang.nama],
+      ['No. Anggota', ang.no||'-'],
+      ['NIK',         ang.nik],
+      ['Jenis',       ang.jenis],
+      ['Bank',        ang.bank||'-'],
+      ['Rekening',    ang.rek||'-'],
+    ].map(([k,v]) => `
+      <div style="display:flex;justify-content:space-between;padding:.4rem 0;border-bottom:1px solid var(--gray-100);font-size:.83rem;">
+        <span style="color:var(--gray-500);">${k}</span>
+        <span style="font-weight:600;">${v}</span>
+      </div>`).join('');
+
+    const li = document.getElementById('m-login-info');
+    if (li) li.textContent = (ang.login_username || ang.nik) + ' / ••••••';
+  },
+
+  // Submit request (penarikan atau ubah_rekening)
+  submitRequest(e, tipe) {
+    e.preventDefault();
+    if (!S.user) return;
+    if (!S.requests) S.requests = [];
+
+    let detail = '', data = {};
+    if (tipe === 'penarikan') {
+      const jenis = document.getElementById('req-tarik-jenis').value;
+      const nom   = +document.getElementById('req-tarik-nom').value;
+      const ket   = document.getElementById('req-tarik-ket').value;
+      detail = `${jenis} — ${UI.fmt(nom)} — "${ket}"`;
+      data = { jenis, nom, ket };
+    } else {
+      const bank  = document.getElementById('req-rek-bank').value;
+      const noRek = document.getElementById('req-rek-no').value;
+      const nama  = document.getElementById('req-rek-nama').value;
+      const ket   = document.getElementById('req-rek-ket').value;
+      detail = `${bank} ${noRek} a/n ${nama}`;
+      data = { bank, noRek, nama, ket };
+    }
+
+    S.requests.push({
+      id: Date.now(),
+      angId: S.user.id,
+      angNama: S.user.username || S.user.nama,
+      tipe, detail, data,
+      status: 'pending',
+      tgl: new Date().toLocaleDateString('id-ID'),
+      ts: new Date().toISOString(),
+    });
+
+    DB.push();
+
+    // Kirim notifikasi email ke admin via GAS (non-blocking)
+    const _gasUrl = localStorage.getItem('gas_url');
+    if (_gasUrl) {
+      const _lastReq = S.requests[S.requests.length-1];
+      fetch(_gasUrl, {
+        method: 'POST',
+        headers: {'Content-Type':'text/plain;charset=utf-8'},
+        body: JSON.stringify({ action: 'notify_request', request: _lastReq })
+      }).catch(()=>{});
+    }
+
+    this.renderRequest();
+    AdminReq.updateBadge();
+    e.target.reset();
+    UI.toast('Pengajuan berhasil dikirim. Menunggu persetujuan admin.');
+  },
+
+  // Ganti password
+  gantiPassword(e) {
+    e.preventDefault();
+    const lama    = document.getElementById('m-pass-lama').value;
+    const baru    = document.getElementById('m-pass-baru').value;
+    const konfirm = document.getElementById('m-pass-konfirm').value;
+
+    const ang = S.anggota.find(a => a.id == S.user.id);
+    if (!ang) return;
+
+    const passLama = ang.login_password || ang.nik;
+    if (lama !== passLama) return UI.toast('Password lama salah', 'danger');
+    if (baru.length < 6)   return UI.toast('Password baru minimal 6 karakter', 'warn');
+    if (baru !== konfirm)  return UI.toast('Konfirmasi password tidak cocok', 'danger');
+
+    ang.login_password = baru;
+    // Update session juga
+    S.user = { ...S.user };
+    sessionStorage.setItem('sikop_user', JSON.stringify(S.user));
+
+    DB.push();
+    e.target.reset();
+    UI.toast('Password berhasil diubah!');
+  },
+
+  // Buka request dari tombol aksi cepat di dasbor
+  openRequest(tipe) {
+    Nav.go('member-request', document.querySelector('[onclick*="member-request"]'));
+    setTimeout(() => {
+      if (tipe === 'penarikan') document.getElementById('req-tarik-jenis')?.focus();
+      else document.getElementById('req-rek-bank')?.focus();
+    }, 200);
+  },
+};
+
+// ============================================================
+// ADMIN REQUEST MODULE — kelola pengajuan dari anggota
+// ============================================================
+const AdminReq = {
+
+  render() {
+    const list = document.getElementById('req-list-admin');
+    if (!list) return;
+
+    const filterStatus = document.getElementById('req-filter-status')?.value || 'semua';
+    const filterType   = document.getElementById('req-filter-type')?.value || 'semua';
+
+    let reqs = (S.requests || []).sort((a,b) => new Date(b.ts||b.tgl) - new Date(a.ts||a.tgl));
+    if (filterStatus !== 'semua') reqs = reqs.filter(r => (r.status||'pending') === filterStatus);
+    if (filterType   !== 'semua') reqs = reqs.filter(r => r.tipe === filterType);
+
+    const info = document.getElementById('req-count-info');
+    const pendingCount = (S.requests||[]).filter(r=>!r.status||r.status==='pending').length;
+    if (info) info.textContent = `${pendingCount} menunggu · ${(S.requests||[]).length} total`;
+
+    if (!reqs.length) {
+      list.innerHTML = '<div style="text-align:center;padding:2rem;color:var(--gray-400);">Tidak ada pengajuan</div>';
+      return;
+    }
+
+    list.innerHTML = reqs.map(r => `
+      <div class="req-item ${r.status||'pending'}">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:.4rem;">
+          <div>
+            <span style="font-weight:700;font-size:.85rem;">${r.angNama}</span>
+            <span class="badge badge-gray" style="margin-left:.4rem;font-size:.65rem;">${r.tipe==='penarikan'?'Penarikan':'Ubah Rekening'}</span>
+          </div>
+          <span class="badge request-status-${r.status||'pending'}">
+            ${(r.status||'pending')==='approved'?'✓ Disetujui':(r.status==='rejected'?'✗ Ditolak':'⏳ Menunggu')}
+          </span>
+        </div>
+        <div style="font-size:.78rem;color:var(--gray-600);margin-bottom:.5rem;">${r.detail}</div>
+        <div style="display:flex;justify-content:space-between;align-items:center;">
+          <small style="color:var(--gray-400);">${r.tgl}</small>
+          <div class="flex gap-2">
+            ${(r.status||'pending')==='pending' ? `
+              <button class="btn btn-success btn-xs" onclick="AdminReq.approve('${r.id}')">
+                <i data-lucide="check" style="width:11px;"></i> Setujui
+              </button>
+              <button class="btn btn-danger btn-xs" onclick="AdminReq.reject('${r.id}')">
+                <i data-lucide="x" style="width:11px;"></i> Tolak
+              </button>` : ''}
+            <button class="btn btn-ghost btn-xs" onclick="AdminReq.detail('${r.id}')">
+              <i data-lucide="eye" style="width:11px;"></i>
+            </button>
+          </div>
+        </div>
+      </div>`).join('');
+    lucide.createIcons();
+  },
+
+  approve(id) {
+    const req = (S.requests||[]).find(r => r.id == id);
+    if (!req) return;
+    req.status = 'approved';
+    req.approvedAt = new Date().toISOString();
+
+    // Jika ubah rekening: terapkan otomatis ke data anggota
+    if (req.tipe === 'ubah_rekening' && req.data) {
+      const ang = S.anggota.find(a => a.id == req.angId);
+      if (ang) {
+        ang.bank = req.data.bank || ang.bank;
+        ang.rek  = req.data.noRek || ang.rek;
+      }
+    }
+
+    DB.push();
+    this.render();
+    this.updateBadge();
+    UI.toast('Pengajuan disetujui');
+  },
+
+  reject(id) {
+    const alasan = prompt('Alasan penolakan (opsional):') ?? '';
+    const req = (S.requests||[]).find(r => r.id == id);
+    if (!req) return;
+    req.status = 'rejected';
+    req.rejectedAt = new Date().toISOString();
+    req.rejectionNote = alasan;
+    DB.push();
+    this.render();
+    this.updateBadge();
+    UI.toast('Pengajuan ditolak', 'warn');
+  },
+
+  detail(id) {
+    const req = (S.requests||[]).find(r => r.id == id);
+    if (!req) return;
+    document.getElementById('req-detail-title').textContent =
+      (req.tipe==='penarikan' ? 'Pengajuan Penarikan' : 'Pengajuan Ubah Rekening') + ' — ' + req.angNama;
+    document.getElementById('req-detail-body').innerHTML = `
+      <div style="font-size:.83rem;line-height:2;">
+        ${Object.entries(req.data||{}).map(([k,v])=>
+          `<div style="display:flex;gap:.5rem;border-bottom:1px solid var(--gray-100);padding:.2rem 0;">
+            <span style="color:var(--gray-500);min-width:120px;">${k}</span>
+            <span style="font-weight:600;">${v}</span>
+          </div>`).join('')}
+        <div style="margin-top:.8rem;">
+          <span style="color:var(--gray-500);">Status</span>
+          <span class="badge request-status-${req.status||'pending'}" style="margin-left:.5rem;">
+            ${(req.status||'pending')==='approved'?'Disetujui':req.status==='rejected'?'Ditolak — '+(req.rejectionNote||'-'):'Menunggu'}
+          </span>
+        </div>
+      </div>`;
+    document.getElementById('req-detail-footer').innerHTML = `
+      <button class="btn btn-ghost" onclick="Modal.close('modal-req-detail')">Tutup</button>
+      ${(req.status||'pending')==='pending' ? `
+        <button class="btn btn-danger btn-sm" onclick="AdminReq.reject('${req.id}');Modal.close('modal-req-detail')">Tolak</button>
+        <button class="btn btn-success btn-sm" onclick="AdminReq.approve('${req.id}');Modal.close('modal-req-detail')">Setujui</button>
+      ` : ''}`;
+    Modal.open('modal-req-detail');
+  },
+
+  updateBadge() {
+    const count = (S.requests||[]).filter(r=>!r.status||r.status==='pending').length;
+    const b = document.getElementById('badge-admin-req');
+    if (b) { b.textContent = count||''; b.style.display = count ? '' : 'none'; }
+  },
+};
+
+// ============================================================
+// PENGUMUMAN MODULE — admin kelola, anggota lihat
+// ============================================================
+const Pengumuman = {
+
+  openForm(id) {
+    if (id) {
+      const p = (S.pengumuman||[]).find(x=>x.id==id);
+      if (!p) return;
+      document.getElementById('peng-edit-id').value = p.id;
+      document.getElementById('peng-judul').value = p.judul;
+      document.getElementById('peng-isi').value   = p.isi;
+      document.getElementById('peng-tipe').value  = p.tipe||'info';
+      document.getElementById('peng-tgl').value   = p.tgl||'';
+    } else {
+      document.getElementById('peng-edit-id').value = '';
+      ['peng-judul','peng-isi'].forEach(f => document.getElementById(f).value='');
+      document.getElementById('peng-tipe').value = 'info';
+      document.getElementById('peng-tgl').value  = new Date().toISOString().split('T')[0];
+    }
+    Modal.open('modal-pengumuman');
+  },
+
+  save() {
+    if (!S.pengumuman) S.pengumuman = [];
+    const editId = document.getElementById('peng-edit-id').value;
+    const data = {
+      id:    editId ? +editId : Date.now(),
+      judul: document.getElementById('peng-judul').value,
+      isi:   document.getElementById('peng-isi').value,
+      tipe:  document.getElementById('peng-tipe').value,
+      tgl:   document.getElementById('peng-tgl').value,
+      aktif: true,
+    };
+    if (editId) {
+      const i = S.pengumuman.findIndex(p=>p.id==editId);
+      if (i>-1) S.pengumuman[i] = data;
+    } else {
+      S.pengumuman.unshift(data);
+    }
+    Modal.close('modal-pengumuman');
+    DB.push();
+    this.renderAdmin();
+    UI.toast('Pengumuman disimpan');
+  },
+
+  hapus(id) {
+    if (!confirm('Hapus pengumuman ini?')) return;
+    S.pengumuman = (S.pengumuman||[]).filter(p=>p.id!=id);
+    DB.push();
+    this.renderAdmin();
+    UI.toast('Pengumuman dihapus');
+  },
+
+  renderAdmin() {
+    const el = document.getElementById('pengumuman-admin-list');
+    if (!el) return;
+    const list = S.pengumuman||[];
+    el.innerHTML = list.length ? list.map(p=>`
+      <div style="display:flex;align-items:center;gap:.5rem;padding:.5rem .2rem;border-bottom:1px solid var(--gray-100);">
+        <span class="badge badge-${p.tipe==='warn'?'warning':p.tipe==='sukses'?'success':'info'}" style="flex-shrink:0;">${p.tipe}</span>
+        <span style="flex:1;font-size:.82rem;font-weight:600;">${p.judul}</span>
+        <small style="color:var(--gray-400);">${p.tgl||''}</small>
+        <button class="btn btn-ghost btn-xs" onclick="Pengumuman.openForm(${p.id})"><i data-lucide="edit-3" style="width:11px;"></i></button>
+        <button class="btn btn-ghost btn-xs" onclick="Pengumuman.hapus(${p.id})"><i data-lucide="trash-2" style="width:11px;color:var(--danger);"></i></button>
+      </div>`).join('')
+    : '<div style="color:var(--gray-400);font-size:.8rem;padding:.5rem 0;">Belum ada pengumuman</div>';
+    lucide.createIcons();
+  },
+};
+
 // ============================================================
 // PROTECTION MODULE — UI untuk domain monitor & whitelist
 // ============================================================
@@ -2411,6 +3093,9 @@ window.onload = function() {
     if (e.key === 'Enter') Auth.login();
   });
 
+  // Init badge request admin
+  AdminReq.updateBadge();
+
   // Tarik data cloud di background (tidak block UI)
   setTimeout(() => DB.pull(), 800);
 
@@ -2418,5 +3103,40 @@ window.onload = function() {
   setTimeout(() => _Telemetry.send(), 2500);
 };
 </script>
+
+<!-- Modal Pengumuman Form -->
+<div class="modal-backdrop" id="modal-pengumuman">
+  <div class="modal-box" style="max-width:480px;">
+    <div class="modal-title">Tambah Pengumuman</div>
+    <input type="hidden" id="peng-edit-id">
+    <div class="field-group"><label class="field-label">Judul</label><input type="text" id="peng-judul" placeholder="Contoh: Jadwal Rapat Tahunan"></div>
+    <div class="field-group"><label class="field-label">Isi Pengumuman</label><textarea id="peng-isi" rows="3" required></textarea></div>
+    <div class="form-row form-col-2">
+      <div class="field-group">
+        <label class="field-label">Tipe</label>
+        <select id="peng-tipe">
+          <option value="info">Info (Biru)</option>
+          <option value="warn">Peringatan (Kuning)</option>
+          <option value="sukses">Pengumuman Baik (Hijau)</option>
+        </select>
+      </div>
+      <div class="field-group"><label class="field-label">Tanggal</label><input type="date" id="peng-tgl"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="Modal.close('modal-pengumuman')">Batal</button>
+      <button class="btn btn-primary" onclick="Pengumuman.save()">Simpan</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Detail Request (Admin) -->
+<div class="modal-backdrop" id="modal-req-detail">
+  <div class="modal-box" style="max-width:480px;">
+    <div class="modal-title" id="req-detail-title">Detail Pengajuan</div>
+    <div id="req-detail-body"></div>
+    <div class="modal-footer" id="req-detail-footer"></div>
+  </div>
+</div>
+
 </body>
 </html>
