@@ -1033,6 +1033,14 @@ label.field-label {
       <div class="field-group"><label class="field-label">Nama Bank</label><input type="text" id="ang-bank"></div>
       <div class="field-group"><label class="field-label">No. Rekening</label><input type="text" id="ang-rek"></div>
     </div>
+    <div style="background:var(--primary-light);border-radius:var(--radius-md);padding:.8rem 1rem;margin-bottom:.9rem;">
+      <div style="font-size:.72rem;font-weight:700;color:var(--primary);margin-bottom:.6rem;text-transform:uppercase;letter-spacing:.05em;">Akses Login Anggota</div>
+      <div class="form-row form-col-2" style="margin-bottom:0;">
+        <div class="field-group" style="margin-bottom:0;"><label class="field-label">Username Login</label><input type="text" id="ang-uname" placeholder="Default: NIK"></div>
+        <div class="field-group" style="margin-bottom:0;"><label class="field-label">Password Login</label><input type="password" id="ang-pwd" placeholder="Default: NIK"></div>
+      </div>
+      <div style="font-size:.68rem;color:var(--gray-500);margin-top:.4rem;">Kosongkan = username &amp; password otomatis menggunakan NIK</div>
+    </div>
     <div class="modal-footer">
       <button class="btn btn-ghost" onclick="Modal.close('modal-anggota')">Batal</button>
       <button class="btn btn-primary" onclick="Features.saveAnggota()">Simpan</button>
@@ -1054,10 +1062,16 @@ label.field-label {
 
 <!-- Modal User -->
 <div class="modal-backdrop" id="modal-user">
-  <div class="modal-box" style="max-width:360px;">
-    <div class="modal-title">Tambah User</div>
+  <div class="modal-box" style="max-width:400px;">
+    <div class="modal-title">Tambah User Admin</div>
     <div class="field-group"><label class="field-label">Username</label><input type="text" id="usr-name"></div>
     <div class="field-group"><label class="field-label">Password</label><input type="password" id="usr-pass"></div>
+    <div class="field-group"><label class="field-label">Role</label>
+      <select id="usr-role">
+        <option value="admin">Admin — akses penuh</option>
+        <option value="viewer">Viewer — hanya lihat laporan</option>
+      </select>
+    </div>
     <div class="modal-footer">
       <button class="btn btn-ghost" onclick="Modal.close('modal-user')">Batal</button>
       <button class="btn btn-primary" onclick="Features.saveUser()">Simpan</button>
@@ -1394,75 +1408,143 @@ let S = {
 let SB = null; // Supabase client
 
 // ============================================================
-// SUPABASE
+// SUPABASE  — fixed: re-init dari localStorage setiap push/pull
 // ============================================================
 const SupaDB = {
-  init() {
-    if (!CONFIG.supabaseUrl || !CONFIG.supabaseKey) return false;
-    try {
-      SB = supabase.createClient(CONFIG.supabaseUrl, CONFIG.supabaseKey);
-      return true;
-    } catch(e) { return false; }
+  _client: null,
+
+  // Selalu baca URL & key terbaru dari localStorage
+  _get() {
+    const url = localStorage.getItem('sb_url') || '';
+    const key = localStorage.getItem('sb_key') || '';
+    if (!url || !key) return null;
+    if (!this._client) {
+      try { this._client = supabase.createClient(url, key); } catch(e) { return null; }
+    }
+    return this._client;
   },
-  async pull() {
-    if (!SB) return;
+
+  // Paksa reinit (dipanggil setelah simpan koneksi baru)
+  reinit() {
+    this._client = null;
+    const url = localStorage.getItem('sb_url') || '';
+    const key = localStorage.getItem('sb_key') || '';
+    if (!url || !key) { SB = null; return false; }
     try {
-      const { data } = await SB.from('app_state').select('*').eq('key','main_state').single();
+      this._client = supabase.createClient(url, key);
+      SB = this._client;
+      return true;
+    } catch(e) { SB = null; return false; }
+  },
+
+  init() { return this.reinit(); },
+
+  async pull() {
+    const client = this._get();
+    if (!client) return false;
+    try {
+      const { data, error } = await client
+        .from('app_state')
+        .select('value')
+        .eq('key', 'main_state')
+        .maybeSingle();
+      if (error) throw error;
       if (data?.value) {
         const fetched = JSON.parse(data.value);
         const cur = S.user;
         S = { ...S, ...fetched };
         S.user = cur;
+        if (!S.users?.length) S.users = [{username:'admin',password:'123',role:'admin'}];
+        if (!S.pinjaman) S.pinjaman = [];
+        if (!S.cicilan) S.cicilan = [];
         UI.applySettings();
         if (S.user) Render.all();
+        return true;
       }
-    } catch(e) { console.warn('Supabase pull fail:', e); }
+      return false;
+    } catch(e) {
+      console.warn('[Supabase] pull error:', e.message);
+      return false;
+    }
   },
+
   async push() {
-    Storage.local();
-    if (!SB) {
+    Storage.local(); // Selalu simpan lokal dulu
+    const client = this._get();
+    if (!client) {
+      // Fallback ke GAS
       if (CONFIG.gasUrl) await GAS.push();
-      return;
+      return false;
     }
     try {
-      const payload = JSON.stringify(S);
-      await SB.from('app_state').upsert({ key: 'main_state', value: payload, updated_at: new Date().toISOString() });
-      UI.toast('Tersinkronisasi ke Supabase');
+      // Sanitize: hapus session user sebelum simpan ke cloud
+      const toSave = { ...S };
+      delete toSave.user;
+      const { error } = await client
+        .from('app_state')
+        .upsert(
+          { key: 'main_state', value: JSON.stringify(toSave), updated_at: new Date().toISOString() },
+          { onConflict: 'key' }
+        );
+      if (error) throw error;
+      UI.toast('Tersinkronisasi ✓');
+      return true;
     } catch(e) {
-      UI.toast('Gagal sync Supabase, coba GAS…', 'warn');
+      console.warn('[Supabase] push error:', e.message);
+      UI.toast('Supabase gagal, coba GAS…', 'warn');
       if (CONFIG.gasUrl) await GAS.push();
+      return false;
     }
   },
 };
 
 // ============================================================
-// GAS FALLBACK
+// GAS FALLBACK — fixed: proper POST + response check
 // ============================================================
 const GAS = {
   async push() {
-    if (!CONFIG.gasUrl) return;
+    const url = localStorage.getItem('gas_url') || CONFIG.gasUrl;
+    if (!url) return false;
     try {
-      await fetch(CONFIG.gasUrl, {
-        method:'POST',
-        headers:{'Content-Type':'text/plain;charset=utf-8'},
-        body: JSON.stringify({ action:'sync', data: JSON.stringify(S) })
+      const toSave = { ...S }; delete toSave.user;
+      const res = await fetch(url, {
+        method: 'POST',
+        // GAS butuh text/plain untuk menghindari CORS preflight
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+        body: JSON.stringify({ action: 'sync', data: JSON.stringify(toSave) }),
+        mode: 'cors',
       });
-    } catch(e) {}
+      const r = await res.json();
+      if (r?.status === 'success') { UI.toast('Tersinkronisasi ke GAS ✓'); return true; }
+      return false;
+    } catch(e) {
+      console.warn('[GAS] push error:', e.message);
+      return false;
+    }
   },
   async pull() {
-    if (!CONFIG.gasUrl) return;
+    const url = localStorage.getItem('gas_url') || CONFIG.gasUrl;
+    if (!url) return false;
     try {
-      const res = await fetch(CONFIG.gasUrl + '?action=get');
+      const res = await fetch(url + '?action=get', { mode: 'cors' });
       const r = await res.json();
       if (r?.data) {
         const fetched = JSON.parse(r.data);
         const cur = S.user;
         S = { ...S, ...fetched };
         S.user = cur;
+        if (!S.users?.length) S.users = [{username:'admin',password:'123',role:'admin'}];
+        if (!S.pinjaman) S.pinjaman = [];
+        if (!S.cicilan) S.cicilan = [];
         UI.applySettings();
         if (S.user) Render.all();
+        return true;
       }
-    } catch(e) {}
+      return false;
+    } catch(e) {
+      console.warn('[GAS] pull error:', e.message);
+      return false;
+    }
   }
 };
 
@@ -1496,38 +1578,64 @@ const Storage = {
 };
 
 // ============================================================
-// DB SYNC
+// DB SYNC — router utama push/pull
 // ============================================================
 const DB = {
   async pull() {
     const icon = document.getElementById('sync-icon');
     icon?.classList.add('spin');
-    if (SB) await SupaDB.pull();
-    else await GAS.pull();
+    let ok = false;
+    // Coba Supabase dulu, fallback ke GAS
+    if (localStorage.getItem('sb_url')) ok = await SupaDB.pull();
+    if (!ok && localStorage.getItem('gas_url')) ok = await GAS.pull();
     setTimeout(() => icon?.classList.remove('spin'), 600);
+    return ok;
   },
-  push: () => SupaDB.push(),
+  async push() {
+    // push() sudah handle fallback ke GAS sendiri
+    return await SupaDB.push();
+  },
+  updateStatus() {
+    const dot = document.getElementById('conn-dot');
+    const txt = document.getElementById('conn-text');
+    if (!dot) return;
+    const hasSB = !!localStorage.getItem('sb_url');
+    const hasGAS = !!localStorage.getItem('gas_url');
+    if (hasSB) { dot.style.background='var(--success)'; txt.textContent='Supabase'; }
+    else if (hasGAS) { dot.style.background='var(--warning)'; txt.textContent='GAS Mode'; }
+    else { dot.style.background='var(--gray-400)'; txt.textContent='Offline'; }
+  }
 };
 
 // ============================================================
-// AUTH
+// AUTH — fixed: anggota bisa login dengan username/password custom
 // ============================================================
 const Auth = {
   login() {
     const u = document.getElementById('inp-user').value.trim();
     const p = document.getElementById('inp-pass').value;
-    const admin = S.users.find(x => x.username === u && x.password === p);
-    if (admin) {
-      S.user = { ...admin, role: 'admin' };
+
+    // 1. Cek user admin/viewer di tabel users
+    const adminUser = S.users.find(x => x.username === u && x.password === p);
+    if (adminUser) {
+      S.user = { ...adminUser };
       sessionStorage.setItem('sikop_user', JSON.stringify(S.user));
       this._show(); return;
     }
-    const ang = S.anggota.find(x => x.nik === u && x.nik === p);
+
+    // 2. Cek anggota — username bisa pakai NIK atau username custom
+    //    password bisa pakai NIK (default) atau password custom
+    const ang = S.anggota.find(x => {
+      const loginUser = x.login_username || x.nik;
+      const loginPass = x.login_password || x.nik;
+      return loginUser === u && loginPass === p;
+    });
     if (ang) {
       S.user = { ...ang, username: ang.nama, role: 'anggota' };
       sessionStorage.setItem('sikop_user', JSON.stringify(S.user));
       this._show(); return;
     }
+
     UI.toast('Username atau password salah', 'danger');
   },
   check() {
@@ -1577,25 +1685,42 @@ const UI = {
     if (!S.user) return;
     const role = S.user.role;
     document.getElementById('sb-username').textContent = S.user.username;
-    document.getElementById('sb-role').textContent = role === 'admin' ? 'Administrator' : 'Anggota';
+    document.getElementById('sb-role').textContent =
+      role === 'admin' ? 'Administrator' :
+      role === 'viewer' ? 'Viewer' : 'Anggota';
     document.getElementById('sb-avatar').textContent = (S.user.username||'A')[0].toUpperCase();
-    document.getElementById('current-user-info') && (document.getElementById('current-user-info').textContent = S.user.username);
-    document.getElementById('menu-admin').style.display = role === 'admin' ? '' : 'none';
-    document.getElementById('menu-anggota').style.display = role === 'anggota' ? '' : 'none';
     this.applyFeatures();
     if (role === 'anggota') Nav.go('member-home', null);
-    else Nav.go('dashboard', document.querySelector('.nav-item'));
+    else Nav.go('dashboard', document.querySelector('[onclick*="dashboard"]'));
   },
   applyFeatures() {
-    const f = S.features;
-    document.getElementById('feat-pinjaman').checked = !!f.pinjaman;
-    document.getElementById('feat-stok').checked = f.stok !== false;
-    document.getElementById('feat-roi').checked = f.roi !== false;
+    if (!S.user) return;
+    const role = S.user.role;
+    const f = S.features || {};
+
+    // Menu visibility berdasarkan role
+    document.getElementById('menu-admin').style.display = (role==='admin'||role==='viewer') ? '' : 'none';
+    document.getElementById('menu-anggota').style.display = role==='anggota' ? '' : 'none';
+
+    // Fitur toggle
+    const fpEl = document.getElementById('feat-pinjaman');
+    const fsEl = document.getElementById('feat-stok');
+    const frEl = document.getElementById('feat-roi');
+    if (fpEl) fpEl.checked = !!f.pinjaman;
+    if (fsEl) fsEl.checked = f.stok !== false;
+    if (frEl) frEl.checked = f.roi !== false;
+
     document.getElementById('menu-pinjaman-wrap').style.display = f.pinjaman ? '' : 'none';
-    const sNavStok = document.querySelector('[onclick*="stok"]');
-    if (sNavStok) sNavStok.parentElement.style.display = f.stok !== false ? '' : 'none';
-    const sNavROI = document.querySelector('[onclick*="modal"]');
-    if (sNavROI) sNavROI.style.display = f.roi !== false ? '' : 'none';
+
+    // Viewer: sembunyikan menu Settings & Users
+    if (role === 'viewer') {
+      document.querySelectorAll('[onclick*="users"],[onclick*="settings"]')
+        .forEach(el => el.closest('.nav-item') && (el.closest('.nav-item').style.display='none'));
+    }
+
+    // Sembunyikan form input untuk viewer (hanya bisa lihat)
+    document.querySelectorAll('.no-print button:not([onclick*="Export"]):not([onclick*="print"])')
+      .forEach(b => { if(role==='viewer') b.style.display='none'; });
   },
   filter(inp, tableId) {
     const q = inp.value.toLowerCase();
@@ -1643,7 +1768,8 @@ const Modal = {
     document.getElementById(id).style.display = 'none';
     if (id === 'modal-anggota') {
       document.getElementById('ang-edit-id').value = '';
-      ['ang-nama','ang-nik','ang-no','ang-bank','ang-rek'].forEach(f => document.getElementById(f).value = '');
+      ['ang-nama','ang-nik','ang-no','ang-bank','ang-rek','ang-uname','ang-pwd']
+        .forEach(f => { const el=document.getElementById(f); if(el) el.value=''; });
       document.getElementById('ang-jenis').value = 'Reguler';
     }
   },
@@ -1685,19 +1811,25 @@ const Features = {
   saveAnggota() {
     const editId = document.getElementById('ang-edit-id').value;
     let no = document.getElementById('ang-no').value;
+    const nik = document.getElementById('ang-nik').value;
     if (!editId && !no) {
       const yr = new Date().getFullYear(); const kode = '06';
       const yrs = S.anggota.filter(a => a.no?.startsWith(`${yr}-${kode}`));
       const last = yrs.length ? Math.max(...yrs.map(a => parseInt(a.no.split('-')[2])||0)) : 0;
       no = `${yr}-${kode}-${String(last+1).padStart(3,'0')}`;
     }
+    const customUser = document.getElementById('ang-uname').value.trim();
+    const customPass = document.getElementById('ang-pwd').value;
     const data = {
       id: editId ? parseInt(editId) : Date.now(),
       nama: document.getElementById('ang-nama').value,
-      nik: document.getElementById('ang-nik').value,
+      nik,
       no, jenis: document.getElementById('ang-jenis').value,
       bank: document.getElementById('ang-bank').value,
       rek: document.getElementById('ang-rek').value,
+      // Login credentials: custom jika diisi, default ke NIK
+      login_username: customUser || nik,
+      login_password: customPass || nik,
     };
     if (editId) { const i = S.anggota.findIndex(a => a.id == editId); S.anggota[i] = data; }
     else S.anggota.push(data);
@@ -1715,6 +1847,9 @@ const Features = {
     document.getElementById('ang-jenis').value = a.jenis;
     document.getElementById('ang-bank').value = a.bank || '';
     document.getElementById('ang-rek').value = a.rek || '';
+    // Tampilkan custom login jika ada & beda dari NIK
+    document.getElementById('ang-uname').value = a.login_username !== a.nik ? (a.login_username||'') : '';
+    document.getElementById('ang-pwd').value = '';
     Modal.open('modal-anggota');
   },
 
@@ -1918,20 +2053,44 @@ const Features = {
   },
 
   saveConn() {
-    CONFIG.supabaseUrl = document.getElementById('set-sb-url').value.trim();
-    CONFIG.supabaseKey = document.getElementById('set-sb-key').value.trim();
-    CONFIG.gasUrl = document.getElementById('set-gas-url').value.trim();
-    localStorage.setItem('sb_url', CONFIG.supabaseUrl);
-    localStorage.setItem('sb_key', CONFIG.supabaseKey);
-    localStorage.setItem('gas_url', CONFIG.gasUrl);
-    SupaDB.init(); UI.toast('Koneksi diperbarui. Sync ulang…');
-    DB.pull();
+    const sbUrl = document.getElementById('set-sb-url').value.trim();
+    const sbKey = document.getElementById('set-sb-key').value.trim();
+    const gasUrl = document.getElementById('set-gas-url').value.trim();
+
+    // Simpan ke localStorage (sumber kebenaran)
+    if (sbUrl) localStorage.setItem('sb_url', sbUrl);
+    else localStorage.removeItem('sb_url');
+    if (sbKey) localStorage.setItem('sb_key', sbKey);
+    else localStorage.removeItem('sb_key');
+    if (gasUrl) localStorage.setItem('gas_url', gasUrl);
+    else localStorage.removeItem('gas_url');
+
+    // Update CONFIG object in-memory
+    CONFIG.supabaseUrl = sbUrl;
+    CONFIG.supabaseKey = sbKey;
+    CONFIG.gasUrl = gasUrl;
+
+    // Reinit Supabase client dengan kredensial baru
+    const ok = SupaDB.reinit();
+    DB.updateStatus();
+
+    UI.toast(ok ? 'Koneksi Supabase aktif — menarik data…' : (gasUrl ? 'Mode GAS aktif' : 'Mode Offline'));
+
+    // Pull data terbaru dari cloud
+    setTimeout(() => DB.pull(), 500);
   },
 
   saveUser() {
-    const u=document.getElementById('usr-name').value.trim(), p=document.getElementById('usr-pass').value;
+    const u=document.getElementById('usr-name').value.trim();
+    const p=document.getElementById('usr-pass').value;
+    const r=document.getElementById('usr-role').value || 'admin';
     if (!u||!p) return UI.toast('Isi semua field','warn');
-    S.users.push({username:u,password:p,role:'admin'}); DB.push(); Render.all(); Modal.close('modal-user'); UI.toast('User ditambahkan');
+    if (S.users.find(x=>x.username===u)) return UI.toast('Username sudah ada','warn');
+    S.users.push({username:u, password:p, role:r});
+    DB.push(); Render.all(); Modal.close('modal-user');
+    document.getElementById('usr-name').value='';
+    document.getElementById('usr-pass').value='';
+    UI.toast('User ditambahkan');
   },
 
   editPass(u) { document.getElementById('ep-username').value=u; document.getElementById('ep-display').value=u; document.getElementById('ep-new').value=''; Modal.open('modal-edit-pass'); },
@@ -2028,8 +2187,13 @@ const Render = {
     tb.innerHTML = S.anggota.map((a,i)=>`<tr>
       <td>${a.no||i+1}</td><td><b>${a.nama}</b></td><td><small>${a.nik}</small></td>
       <td><span class="badge badge-gray">${a.jenis}</span></td>
-      <td><small>${a.bank||'-'} ${a.rek?'('+a.rek+')':''}</small></td>
-      <td class="no-print"><button class="btn btn-ghost btn-xs" onclick="Features.editAnggota(${a.id})"><i data-lucide="edit-3" style="width:12px;"></i></button> <button class="btn btn-ghost btn-xs" onclick="Features.delAnggota(${a.id})"><i data-lucide="trash-2" style="width:12px;color:var(--danger);"></i></button></td>
+      <td><small style="color:var(--gray-500);">
+        <i data-lucide="user" style="width:11px;height:11px;"></i> ${a.login_username||a.nik}
+      </small></td>
+      <td class="no-print">
+        <button class="btn btn-ghost btn-xs" onclick="Features.editAnggota(${a.id})"><i data-lucide="edit-3" style="width:12px;"></i></button>
+        <button class="btn btn-ghost btn-xs" onclick="Features.delAnggota(${a.id})"><i data-lucide="trash-2" style="width:12px;color:var(--danger);"></i></button>
+      </td>
     </tr>`).join('');
   },
 
@@ -2076,9 +2240,13 @@ const Render = {
     const s = document.getElementById('simp-ang');
     if (s) s.innerHTML = S.anggota.map(a=>`<option value="${a.id}">${a.nama}</option>`).join('');
     const tu = document.querySelector('#tbl-users tbody');
-    if (tu) tu.innerHTML = S.users.map(u=>`<tr><td><b>${u.username}</b></td><td><span class="badge badge-info">${u.role}</span></td>
-      <td class="no-print"><button class="btn btn-ghost btn-xs" onclick="Features.editPass('${u.username}')"><i data-lucide="key" style="width:12px;color:var(--warning);"></i></button>
-      <button class="btn btn-ghost btn-xs" onclick="Features.delUser('${u.username}')"><i data-lucide="trash-2" style="width:12px;color:var(--danger);"></i></button></td></tr>`).join('');
+    if (tu) tu.innerHTML = S.users.map(u=>`<tr>
+      <td><b>${u.username}</b></td>
+      <td><span class="badge ${u.role==='admin'?'badge-info':u.role==='viewer'?'badge-warning':'badge-gray'}">${u.role}</span></td>
+      <td class="no-print">
+        <button class="btn btn-ghost btn-xs" onclick="Features.editPass('${u.username}')"><i data-lucide="key" style="width:12px;color:var(--warning);"></i></button>
+        <button class="btn btn-ghost btn-xs" onclick="Features.delUser('${u.username}')"><i data-lucide="trash-2" style="width:12px;color:var(--danger);"></i></button>
+      </td></tr>`).join('');
   }
 };
 
@@ -2221,7 +2389,10 @@ const Protection = {
 // ============================================================
 window.onload = function() {
   Storage.loadLocal();
-  SupaDB.init();
+
+  // Init Supabase dari localStorage (bukan CONFIG yang mungkin kosong)
+  SupaDB.reinit();
+
   UI.applySettings();
   UI.applyFeatures();
   Auth.check();
@@ -2229,18 +2400,22 @@ window.onload = function() {
     document.getElementById('login-screen').style.display = 'flex';
     UI.applySettings();
   }
-  // Connection status
-  const dot = document.getElementById('conn-dot');
-  const txt = document.getElementById('conn-text');
-  if (SB) { dot.style.background='var(--success)'; txt.textContent='Supabase Aktif'; }
-  else if (CONFIG.gasUrl) { dot.style.background='var(--warning)'; txt.textContent='Mode GAS'; }
-  else { dot.style.background='var(--gray-400)'; txt.textContent='Mode Offline'; }
-  lucide.createIcons();
-  // Enter key on login
-  document.getElementById('inp-pass').addEventListener('keydown', e => { if(e.key==='Enter') Auth.login(); });
 
-  // LAPIS 2B — Kirim telemetry ping (non-blocking, 2 detik setelah load)
-  setTimeout(() => _Telemetry.send(), 2000);
+  // Update status koneksi berdasarkan localStorage
+  DB.updateStatus();
+
+  lucide.createIcons();
+
+  // Enter key login
+  document.getElementById('inp-pass').addEventListener('keydown', e => {
+    if (e.key === 'Enter') Auth.login();
+  });
+
+  // Tarik data cloud di background (tidak block UI)
+  setTimeout(() => DB.pull(), 800);
+
+  // Telemetry ping — non-blocking
+  setTimeout(() => _Telemetry.send(), 2500);
 };
 </script>
 </body>
