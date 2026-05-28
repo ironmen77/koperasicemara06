@@ -2043,7 +2043,7 @@ const Features = {
       const sel = document.getElementById(id);
       if (!sel) return;
       sel.innerHTML = '';
-      for (let y = 2025; y <= Math.max(max, cur); y++) {
+      for (let y = 2025; y <= Math.max(max, cur, 2028); y++) {
         const o = document.createElement('option'); o.value = y; o.textContent = y;
         if (y === cur) o.selected = true;
         sel.appendChild(o);
