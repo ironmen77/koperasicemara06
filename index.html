@@ -64,7 +64,7 @@
 
 /* ===== RESET & BASE ===== */
 *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
-html { scroll-behavior: smooth; }
+html { scroll-behavior: smooth; height: 100%; }
 body {
   font-family: var(--font-sans);
   font-size: 14px;
@@ -72,9 +72,15 @@ body {
   background: var(--app-bg);
   background-size: cover;
   background-attachment: fixed;
-  display: flex;
   min-height: 100vh;
+  /* TIDAK pakai display:flex di level body saat login
+     supaya #login-screen bisa cover penuh tanpa bocor */
+}
+/* Layout utama app (setelah login) diaktifkan via class */
+body.app-ready {
+  display: flex;
   overflow: hidden;
+  height: 100vh;
 }
 
 /* ===== SCROLLBAR ===== */
@@ -84,86 +90,162 @@ body {
 
 /* ===== LOGIN ===== */
 #login-screen {
-  position: fixed; inset: 0; z-index: 9999;
-  display: flex; align-items: center; justify-content: center;
+  /* Full-page, tidak terpengaruh body layout sama sekali */
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  width: 100vw;
+  height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  /* Background sama dengan body */
   background: var(--app-bg);
   background-size: cover;
   background-attachment: fixed;
-  /* Pastikan tidak ada celah — body flex tidak boleh bocor */
-  min-height: 100vh;
-  min-width: 100vw;
+  /* Overlay gelap */
+  background-blend-mode: normal;
 }
-/* Overlay gelap untuk pastikan background terlihat */
-#login-screen::before {
+#login-screen::after {
   content: '';
-  position: absolute; inset: 0;
-  background: rgba(0,0,0,.35);
-  z-index: 0;
+  position: absolute;
+  inset: 0;
+  background: rgba(9, 15, 35, 0.55);
+  pointer-events: none;
 }
 .login-wrap {
-  display: grid; grid-template-columns: 1fr 1fr;
-  width: 860px; max-width: 92vw;
-  background: white; border-radius: var(--radius-xl);
-  overflow: hidden; box-shadow: 0 25px 60px rgba(0,0,0,.5);
-  position: relative; z-index: 1;  /* di atas overlay */
+  position: relative;
+  z-index: 1; /* di atas ::after overlay */
+  display: grid;
+  grid-template-columns: 420px 1fr;
+  width: min(860px, 94vw);
+  border-radius: var(--radius-xl);
+  overflow: hidden;
+  box-shadow: 0 32px 80px rgba(0,0,0,.6), 0 0 0 1px rgba(255,255,255,.06);
 }
 .login-left {
-  background: var(--sidebar-bg);
+  background: #0b1225;
   padding: 3rem 2.5rem;
-  display: flex; flex-direction: column; justify-content: space-between;
-  position: relative; overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  position: relative;
+  overflow: hidden;
+  min-height: 480px;
 }
 .login-left::before {
   content: '';
   position: absolute; inset: 0;
-  background: radial-gradient(ellipse at 30% 70%, rgba(26,86,219,.35) 0%, transparent 60%),
-              radial-gradient(ellipse at 80% 20%, rgba(249,115,22,.2) 0%, transparent 50%);
+  background:
+    radial-gradient(ellipse 80% 60% at 20% 80%, rgba(26,86,219,.4) 0%, transparent 70%),
+    radial-gradient(ellipse 60% 40% at 85% 15%, rgba(249,115,22,.25) 0%, transparent 60%);
+  pointer-events: none;
 }
 .login-left-content { position: relative; z-index: 1; }
-.login-brand { display: flex; align-items: center; gap: 12px; margin-bottom: 2.5rem; }
-.login-brand img { width: 42px; height: 42px; border-radius: 10px; object-fit: contain; background: rgba(255,255,255,.1); padding: 4px; }
-.login-brand span { font-family: var(--font-serif); font-size: 1.4rem; color: white; }
-.login-tagline { color: rgba(255,255,255,.6); font-size: 0.82rem; line-height: 1.7; }
-.login-tagline h3 { color: white; font-size: 1.3rem; margin-bottom: .5rem; font-family: var(--font-serif); }
+.login-brand {
+  display: flex; align-items: center; gap: 12px;
+  margin-bottom: 2.5rem;
+}
+.login-brand img {
+  width: 44px; height: 44px;
+  border-radius: 12px;
+  object-fit: contain;
+  background: rgba(255,255,255,.08);
+  padding: 5px;
+  border: 1px solid rgba(255,255,255,.1);
+}
+.login-brand span {
+  font-family: var(--font-serif);
+  font-size: 1.35rem;
+  color: white;
+  letter-spacing: .01em;
+}
+.login-tagline { color: rgba(255,255,255,.55); font-size: .82rem; line-height: 1.8; }
+.login-tagline h3 {
+  color: white; font-size: 1.25rem;
+  margin-bottom: .6rem;
+  font-family: var(--font-serif);
+  line-height: 1.3;
+}
 .login-dots { display: flex; gap: 6px; margin-top: 2rem; }
-.login-dots span { width: 8px; height: 8px; border-radius: 50%; background: rgba(255,255,255,.2); }
-.login-dots span:first-child { background: var(--accent); width: 24px; border-radius: 4px; }
-.login-right { padding: 3rem 2.5rem; display: flex; flex-direction: column; justify-content: center; }
-.login-right h2 { font-family: var(--font-serif); font-size: 1.6rem; color: var(--gray-900); margin-bottom: .4rem; }
-.login-right p { color: var(--gray-500); font-size: .82rem; margin-bottom: 2rem; }
-.form-label { display: block; font-size: .72rem; font-weight: 600; color: var(--gray-600); text-transform: uppercase; letter-spacing: .05em; margin-bottom: .4rem; }
+.login-dots span { width: 8px; height: 8px; border-radius: 50%; background: rgba(255,255,255,.15); }
+.login-dots span:first-child { background: var(--accent); width: 28px; border-radius: 4px; }
+.login-left-foot { color: rgba(255,255,255,.18); font-size: .63rem; position: relative; z-index:1; }
+
+/* Sisi kanan — form */
+.login-right {
+  background: white;
+  padding: 3rem 2.5rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+.login-right h2 {
+  font-family: var(--font-serif);
+  font-size: 1.55rem;
+  color: var(--gray-900);
+  margin-bottom: .3rem;
+  line-height: 1.2;
+}
+.login-right > p {
+  color: var(--gray-500); font-size: .82rem; margin-bottom: 1.8rem;
+}
+.form-label {
+  display: block;
+  font-size: .7rem; font-weight: 700;
+  color: var(--gray-500);
+  text-transform: uppercase; letter-spacing: .06em;
+  margin-bottom: .38rem;
+}
 .form-input {
   width: 100%; padding: .7rem .9rem;
   border: 1.5px solid var(--gray-200);
   border-radius: var(--radius-md);
-  font-family: var(--font-sans); font-size: .9rem;
+  font-family: var(--font-sans); font-size: .88rem;
   color: var(--gray-800);
-  transition: border-color .2s, box-shadow .2s;
+  background: white;
+  transition: border-color .15s, box-shadow .15s;
   outline: none;
 }
-.form-input:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(26,86,219,.1); }
-.form-group { margin-bottom: 1.2rem; }
+.form-input:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(26,86,219,.1);
+}
+.form-group { margin-bottom: 1.1rem; }
 .btn-login {
-  width: 100%; padding: .8rem;
+  width: 100%; padding: .78rem;
   background: var(--primary); color: white;
   border: none; border-radius: var(--radius-md);
-  font-family: var(--font-sans); font-size: .9rem; font-weight: 600;
-  cursor: pointer; transition: background .2s, transform .1s;
+  font-family: var(--font-sans); font-size: .88rem; font-weight: 700;
+  cursor: pointer;
+  transition: background .15s, transform .1s, box-shadow .15s;
+  letter-spacing: .02em;
 }
-.btn-login:hover { background: var(--primary-dark); }
+.btn-login:hover { background: var(--primary-dark); box-shadow: 0 4px 16px rgba(26,86,219,.35); }
 .btn-login:active { transform: scale(.99); }
+/* Mobile */
+@media (max-width: 640px) {
+  .login-left  { display: none; }
+  .login-wrap  { grid-template-columns: 1fr; max-width: 420px; border-radius: var(--radius-lg); }
+  .login-right { padding: 2.5rem 1.8rem; }
+}
 
 /* ===== LAYOUT ===== */
-#sidebar {
+/* Sidebar dan main TIDAK TAMPIL saat belum login */
+#sidebar, #main { display: none !important; }
+/* Setelah login, body.app-ready mengaktifkan keduanya */
+body.app-ready #sidebar {
+  display: flex !important;
+  flex-direction: column;
   width: var(--sidebar-w); min-width: var(--sidebar-w);
-  background: var(--sidebar-bg);
-  display: none; flex-direction: column;
   height: 100vh; position: sticky; top: 0;
+  background: var(--sidebar-bg);
   border-right: 1px solid rgba(255,255,255,.06);
   overflow-y: auto; overflow-x: hidden;
 }
-#main {
-  flex: 1; display: none; flex-direction: column;
+body.app-ready #main {
+  display: flex !important;
+  flex: 1; flex-direction: column;
   height: 100vh; overflow: hidden;
 }
 #main-scroll { flex: 1; overflow-y: auto; background: var(--gray-50); }
@@ -425,9 +507,7 @@ label.field-label {
 .print-title { font-family: var(--font-serif); font-size: 1.2rem; }
 
 /* ===== RESPONSIVE ===== */
-@media (max-width: 600px) {
-  .login-left { display: none; }
-  .login-wrap { grid-template-columns: 1fr; max-width: 400px; }
+@media (max-width: 640px) {
   .form-col-2, .form-col-3 { grid-template-columns: 1fr; }
 }
 
@@ -445,8 +525,7 @@ label.field-label {
 #nav-member-rekening:hover { opacity: 1; }
 #nav-member-penarikan .nav-icon,
 #nav-member-rekening .nav-icon { width: 13px; height: 13px; }
-/* Login screen — pastikan background tidak ada putih */
-body { isolation: isolate; }
+
 
 .request-status-pending  { background:#fef3c7; color:#92400e; }
 .request-status-approved { background:#d1fae5; color:#065f46; }
@@ -509,7 +588,7 @@ body { isolation: isolate; }
         </div>
         <div class="login-dots"><span></span><span></span><span></span></div>
       </div>
-      <div style="color:rgba(255,255,255,.2); font-size:.65rem;">© 2026 Gurumasakini · v5.0</div>
+      <div class="login-left-foot">© 2026 Gurumasakini · SI-KOP Pro v5.0</div>
     </div>
     <div class="login-right">
       <h2>Masuk ke Sistem</h2>
@@ -1054,7 +1133,16 @@ body { isolation: isolate; }
             <div class="card">
               <div class="card-header"><span class="card-title">Branding Aplikasi</span></div>
               <div class="field-group"><label class="field-label">Nama Koperasi</label><input type="text" id="set-nama"></div>
-              <div class="field-group"><label class="field-label">URL Logo (gambar)</label><input type="text" id="set-logo" placeholder="https://..."><div id="logo-preview" style="margin-top:.5rem;"></div></div>
+              <div class="field-group">
+                <label class="field-label">URL Logo (gambar)</label>
+                <input type="text" id="set-logo" placeholder="https://..."
+                  oninput="UI.previewLogo(this.value)"
+                  onpaste="setTimeout(()=>UI.previewLogo(this.value),50)">
+                <div id="logo-preview" style="margin-top:.5rem;display:flex;align-items:center;gap:.6rem;"></div>
+                <div style="font-size:.68rem;color:var(--gray-400);margin-top:.3rem;">
+                  Google Drive: buka file → Share (Anyone) → salin ID → <code>https://drive.google.com/uc?id=FILE_ID</code>
+                </div>
+              </div>
               <div class="field-group"><label class="field-label">URL Background (opsional)</label><input type="text" id="set-bg" placeholder="https://... atau kosongkan untuk default"></div>
               <button class="btn btn-primary" onclick="Features.saveSettings()"><i data-lucide="save"></i> Simpan Branding</button>
             </div>
@@ -1839,11 +1927,15 @@ const SupaDB = {
       if (data?.value) {
         const fetched = JSON.parse(data.value);
         const cur = S.user;
+        // Deep merge: settings per-field agar logo/bg tidak hilang
         S = { ...S, ...fetched };
+        if (fetched.settings) S.settings = { ...S.settings, ...fetched.settings };
         S.user = cur;
-        if (!S.users?.length) S.users = [{username:'admin',password:'123',role:'admin'}];
-        if (!S.pinjaman) S.pinjaman = [];
-        if (!S.cicilan) S.cicilan = [];
+        if (!S.users?.length)  S.users     = [{username:'admin',password:'123',role:'admin'}];
+        if (!S.pinjaman)       S.pinjaman  = [];
+        if (!S.cicilan)        S.cicilan   = [];
+        if (!S.requests)       S.requests  = [];
+        if (!S.pengumuman)     S.pengumuman = [];
         UI.applySettings();
         if (S.user) Render.all();
         return true;
@@ -1919,10 +2011,13 @@ const GAS = {
         const fetched = JSON.parse(r.data);
         const cur = S.user;
         S = { ...S, ...fetched };
+        if (fetched.settings) S.settings = { ...S.settings, ...fetched.settings };
         S.user = cur;
-        if (!S.users?.length) S.users = [{username:'admin',password:'123',role:'admin'}];
-        if (!S.pinjaman) S.pinjaman = [];
-        if (!S.cicilan) S.cicilan = [];
+        if (!S.users?.length)  S.users     = [{username:'admin',password:'123',role:'admin'}];
+        if (!S.pinjaman)       S.pinjaman  = [];
+        if (!S.cicilan)        S.cicilan   = [];
+        if (!S.requests)       S.requests  = [];
+        if (!S.pengumuman)     S.pengumuman = [];
         UI.applySettings();
         if (S.user) Render.all();
         return true;
@@ -1948,21 +2043,29 @@ const Storage = {
   loadLocal() {
     try {
       const enc = localStorage.getItem('sikop_v5');
+      let parsed = null;
       if (enc) {
         const bytes = CryptoJS.AES.decrypt(enc, 'sikop_aes_key_v5');
-        const parsed = JSON.parse(bytes.toString(CryptoJS.enc.Utf8));
-        S = { ...S, ...parsed };
+        parsed = JSON.parse(bytes.toString(CryptoJS.enc.Utf8));
       } else {
         const raw = localStorage.getItem('sikop_v5_raw');
-        if (raw) S = { ...S, ...JSON.parse(raw) };
+        if (raw) parsed = JSON.parse(raw);
       }
-    } catch(e) {}
-    if (!S.users?.length) S.users = [{username:'admin',password:'123',role:'admin',pin:CONFIG.securityPin}];
-    if (!S.features) S.features = { pinjaman:false, stok:true, roi:true };
-    if (!S.pinjaman)   S.pinjaman = [];
-    if (!S.cicilan)    S.cicilan = [];
-    if (!S.requests)   S.requests = [];
-    if (!S.pengumuman) S.pengumuman = [];
+      if (parsed) {
+        // Deep merge: settings digabung per-field, bukan ditimpa total
+        S = { ...S, ...parsed };
+        if (parsed.settings) {
+          S.settings = { ...S.settings, ...parsed.settings };
+        }
+      }
+    } catch(e) { console.warn('loadLocal error:', e.message); }
+    if (!S.users?.length)  S.users     = [{username:'admin',password:'123',role:'admin'}];
+    if (!S.settings)       S.settings  = { app_name:'SI-KOP Pro', logo_url:'', bg_url:'' };
+    if (!S.features)       S.features  = { pinjaman:false, stok:true, roi:true };
+    if (!S.pinjaman)       S.pinjaman  = [];
+    if (!S.cicilan)        S.cicilan   = [];
+    if (!S.requests)       S.requests  = [];
+    if (!S.pengumuman)     S.pengumuman = [];
   }
 };
 
@@ -2029,11 +2132,23 @@ const Auth = {
   },
   check() {
     const u = sessionStorage.getItem('sikop_user');
-    if (u) { S.user = JSON.parse(u); this._show(); }
+    if (u) {
+      S.user = JSON.parse(u);
+      this._show();
+    } else {
+      // Pastikan login screen tampil bersih tanpa app-ready
+      document.body.classList.remove('app-ready');
+    }
   },
-  logout() { sessionStorage.clear(); location.reload(); },
+  logout() {
+    sessionStorage.clear();
+    document.body.classList.remove('app-ready');
+    location.reload();
+  },
   _show() {
+    // Sembunyikan login, aktifkan layout app
     document.getElementById('login-screen').style.display = 'none';
+    document.body.classList.add('app-ready'); // aktifkan body flex
     document.getElementById('sidebar').style.display = 'flex';
     document.getElementById('main').style.display = 'flex';
     UI.renderMenu();
@@ -2054,21 +2169,58 @@ const UI = {
     setTimeout(() => t.classList.remove('show'), 3000);
   },
   applySettings() {
-    const s = S.settings;
-    document.getElementById('brand-logo').src = s.logo_url;
-    document.getElementById('sb-logo').src = s.logo_url;
-    document.getElementById('sb-name').textContent = s.app_name;
-    document.getElementById('brand-name').textContent = s.app_name;
-    document.getElementById('set-nama').value = s.app_name;
-    document.getElementById('set-logo').value = s.logo_url;
-    document.getElementById('set-bg').value = s.bg_url || '';
-    document.getElementById('print-org-name').textContent = s.app_name;
-    document.getElementById('print-logo').src = s.logo_url;
-    document.getElementById('logo-preview').innerHTML = s.logo_url ? `<img src="${s.logo_url}" style="height:40px;border-radius:6px;border:1px solid var(--gray-200);">` : '';
-    if (s.bg_url) {
-      document.body.style.background = `url('${s.bg_url}') center/cover fixed`;
-      document.getElementById('login-screen').style.background = `url('${s.bg_url}') center/cover fixed`;
+    const s = S.settings || {};
+    const logo = s.logo_url || '';
+    const name = s.app_name || 'SI-KOP Pro';
+    const bg   = s.bg_url   || '';
+
+    // Helper: set src dan paksa reload jika URL berubah
+    function _setLogo(id) {
+      const el = document.getElementById(id);
+      if (!el) return;
+      if (el.src !== logo) {
+        // Force browser reload dengan cache-bust jika src sama tapi gambar beda
+        el.src = logo ? logo + (logo.includes('?') ? '&' : '?') + '_t=' + Date.now() : '';
+        // Fallback jika gambar gagal load
+        el.onerror = function() { el.style.display = 'none'; };
+        el.onload  = function() { el.style.display = ''; };
+      }
     }
+
+    _setLogo('brand-logo');
+    _setLogo('sb-logo');
+    _setLogo('print-logo');
+
+    // Teks
+    ['sb-name','brand-name'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.textContent = name;
+    });
+
+    // Form settings
+    const setNama = document.getElementById('set-nama');   if (setNama) setNama.value = name;
+    const setLogo = document.getElementById('set-logo');   if (setLogo) setLogo.value = logo;
+    const setBg   = document.getElementById('set-bg');     if (setBg)   setBg.value   = bg;
+    const setOrg  = document.getElementById('print-org-name'); if (setOrg) setOrg.textContent = name;
+
+    // Preview logo di settings
+    const prev = document.getElementById('logo-preview');
+    if (prev) prev.innerHTML = logo
+      ? `<img src="${logo}" style="height:40px;border-radius:6px;border:1px solid var(--gray-200);" onerror="this.style.display='none'" onload="this.style.display=''">` : '';
+
+    // Background
+    if (bg) {
+      const bgVal = `url('${bg}') center/cover fixed`;
+      document.body.style.background = bgVal;
+      const loginEl = document.getElementById('login-screen');
+      if (loginEl) loginEl.style.background = bgVal;
+    } else {
+      // Reset ke default jika dikosongkan
+      document.body.style.background = '';
+    }
+
+    // Update page title browser
+    document.title = name + ' | SI-KOP Pro v5.0';
   },
   renderMenu() {
     if (!S.user) return;
@@ -2080,12 +2232,15 @@ const UI = {
     document.getElementById('sb-avatar').textContent = (S.user.username||'A')[0].toUpperCase();
     this.applyFeatures();
     AdminReq.updateBadge();
+    const menuAdmin  = document.getElementById('menu-admin');
+    const menuAnggota = document.getElementById('menu-anggota');
     if (role === 'anggota') {
-      // Pastikan semua menu admin tersembunyi
-      document.getElementById('menu-admin').style.display = 'none';
-      document.getElementById('menu-anggota').style.display = '';
+      if (menuAdmin)  menuAdmin.style.display  = 'none';
+      if (menuAnggota) menuAnggota.style.display = 'block';
       Nav.go('member-home', document.getElementById('nav-member-home'));
     } else {
+      if (menuAdmin)  menuAdmin.style.display  = 'block';
+      if (menuAnggota) menuAnggota.style.display = 'none';
       Nav.go('dashboard', document.querySelector('[onclick*="dashboard"]'));
     }
   },
@@ -2130,6 +2285,21 @@ const UI = {
   },
   fmt: v => new Intl.NumberFormat('id-ID',{style:'currency',currency:'IDR',maximumFractionDigits:0}).format(v||0),
   fmtNum: v => new Intl.NumberFormat('id-ID').format(v||0),
+
+  // Preview logo langsung di form settings
+  previewLogo(url) {
+    const prev = document.getElementById('logo-preview');
+    if (!prev) return;
+    if (!url || !url.startsWith('http')) {
+      prev.innerHTML = '';
+      return;
+    }
+    prev.innerHTML = `
+      <img src="${url}" style="height:44px;width:44px;border-radius:8px;object-fit:contain;border:1px solid var(--gray-200);background:var(--gray-50);padding:3px;"
+        onerror="this.parentElement.innerHTML='<span style=\'font-size:.75rem;color:var(--danger)\'>❌ URL tidak valid atau gambar tidak bisa dimuat</span>'"
+        onload="">
+      <span style="font-size:.75rem;color:var(--success);">✓ Gambar berhasil dimuat</span>`;
+  },
 };
 
 // ============================================================
@@ -2468,10 +2638,23 @@ const Features = {
   },
 
   saveSettings() {
-    S.settings.app_name = document.getElementById('set-nama').value;
-    S.settings.logo_url = document.getElementById('set-logo').value;
-    S.settings.bg_url = document.getElementById('set-bg').value;
-    DB.push(); UI.applySettings(); UI.toast('Pengaturan disimpan');
+    const nama  = document.getElementById('set-nama')?.value?.trim() || S.settings.app_name;
+    const logo  = document.getElementById('set-logo')?.value?.trim() || '';
+    const bg    = document.getElementById('set-bg')?.value?.trim()   || '';
+
+    // Validasi URL logo sederhana
+    if (logo && !logo.startsWith('http') && !logo.startsWith('data:')) {
+      return UI.toast('URL logo harus diawali dengan https://', 'warn');
+    }
+
+    S.settings = { ...S.settings, app_name: nama, logo_url: logo, bg_url: bg };
+
+    // Terapkan langsung ke UI sebelum push (agar terasa responsif)
+    UI.applySettings();
+    Storage.local(); // Simpan ke localStorage dulu
+
+    // Push ke cloud
+    DB.push().then(() => UI.toast('Pengaturan berhasil disimpan ✓'));
   },
 
   saveFeatures() {
