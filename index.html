@@ -64,7 +64,7 @@
 
 /* ===== RESET & BASE ===== */
 *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
-html { scroll-behavior: smooth; height: 100%; }
+html, body { height: 100%; }
 body {
   font-family: var(--font-sans);
   font-size: 14px;
@@ -72,11 +72,8 @@ body {
   background: var(--app-bg);
   background-size: cover;
   background-attachment: fixed;
-  min-height: 100vh;
-  /* TIDAK pakai display:flex di level body saat login
-     supaya #login-screen bisa cover penuh tanpa bocor */
+  min-height: 100%;
 }
-/* Layout utama app (setelah login) diaktifkan via class */
 body.app-ready {
   display: flex;
   overflow: hidden;
@@ -90,150 +87,141 @@ body.app-ready {
 
 /* ===== LOGIN ===== */
 #login-screen {
-  /* Full-page, tidak terpengaruh body layout sama sekali */
   position: fixed;
-  inset: 0;
+  top: 0; left: 0; right: 0; bottom: 0;
   z-index: 9999;
-  width: 100vw;
-  height: 100vh;
   display: flex;
   align-items: center;
   justify-content: center;
-  /* Background sama dengan body */
   background: var(--app-bg);
   background-size: cover;
-  background-attachment: fixed;
-  /* Overlay gelap */
-  background-blend-mode: normal;
 }
 #login-screen::after {
   content: '';
-  position: absolute;
-  inset: 0;
-  background: rgba(9, 15, 35, 0.55);
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(8,12,30,0.6);
+  z-index: 0;
   pointer-events: none;
 }
-.login-wrap {
+.login-card {
   position: relative;
-  z-index: 1; /* di atas ::after overlay */
+  z-index: 1;
   display: grid;
-  grid-template-columns: 420px 1fr;
-  width: min(860px, 94vw);
-  border-radius: var(--radius-xl);
+  grid-template-columns: 380px 360px;
+  border-radius: 20px;
   overflow: hidden;
-  box-shadow: 0 32px 80px rgba(0,0,0,.6), 0 0 0 1px rgba(255,255,255,.06);
+  box-shadow: 0 30px 80px rgba(0,0,0,0.7);
 }
-.login-left {
-  background: #0b1225;
-  padding: 3rem 2.5rem;
+.lc-left {
+  background: #0a1020;
+  padding: 3rem 2.2rem;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
   position: relative;
   overflow: hidden;
-  min-height: 480px;
 }
-.login-left::before {
+.lc-left::before {
   content: '';
-  position: absolute; inset: 0;
+  position: absolute; top: 0; left: 0; right: 0; bottom: 0;
   background:
-    radial-gradient(ellipse 80% 60% at 20% 80%, rgba(26,86,219,.4) 0%, transparent 70%),
-    radial-gradient(ellipse 60% 40% at 85% 15%, rgba(249,115,22,.25) 0%, transparent 60%);
+    radial-gradient(ellipse 90% 60% at 15% 85%, rgba(26,86,219,.45), transparent 65%),
+    radial-gradient(ellipse 60% 40% at 90% 10%, rgba(249,115,22,.3), transparent 60%);
   pointer-events: none;
 }
-.login-left-content { position: relative; z-index: 1; }
-.login-brand {
+.lc-brand {
   display: flex; align-items: center; gap: 12px;
   margin-bottom: 2.5rem;
+  position: relative; z-index: 1;
 }
-.login-brand img {
-  width: 44px; height: 44px;
-  border-radius: 12px;
+.lc-brand img {
+  width: 42px; height: 42px;
+  border-radius: 10px;
   object-fit: contain;
-  background: rgba(255,255,255,.08);
+  background: rgba(255,255,255,.1);
   padding: 5px;
-  border: 1px solid rgba(255,255,255,.1);
 }
-.login-brand span {
+.lc-brand span {
   font-family: var(--font-serif);
-  font-size: 1.35rem;
-  color: white;
-  letter-spacing: .01em;
+  font-size: 1.3rem; color: white;
 }
-.login-tagline { color: rgba(255,255,255,.55); font-size: .82rem; line-height: 1.8; }
-.login-tagline h3 {
-  color: white; font-size: 1.25rem;
-  margin-bottom: .6rem;
+.lc-tagline {
+  position: relative; z-index: 1;
+  color: rgba(255,255,255,.5);
+  font-size: .8rem; line-height: 1.8;
+}
+.lc-tagline h3 {
   font-family: var(--font-serif);
-  line-height: 1.3;
+  font-size: 1.2rem; color: white;
+  margin-bottom: .5rem; line-height: 1.35;
 }
-.login-dots { display: flex; gap: 6px; margin-top: 2rem; }
-.login-dots span { width: 8px; height: 8px; border-radius: 50%; background: rgba(255,255,255,.15); }
-.login-dots span:first-child { background: var(--accent); width: 28px; border-radius: 4px; }
-.login-left-foot { color: rgba(255,255,255,.18); font-size: .63rem; position: relative; z-index:1; }
-
-/* Sisi kanan — form */
-.login-right {
-  background: white;
-  padding: 3rem 2.5rem;
+.lc-dots { display: flex; gap: 6px; margin-top: 1.8rem; position: relative; z-index:1; }
+.lc-dots span { width: 8px; height: 8px; border-radius: 50%; background: rgba(255,255,255,.15); }
+.lc-dots span:first-child { width: 26px; border-radius: 4px; background: var(--accent); }
+.lc-foot { color: rgba(255,255,255,.15); font-size: .6rem; position: relative; z-index:1; }
+.lc-right {
+  background: #ffffff;
+  padding: 2.8rem 2.2rem;
   display: flex;
   flex-direction: column;
   justify-content: center;
 }
-.login-right h2 {
+.lc-right h2 {
   font-family: var(--font-serif);
-  font-size: 1.55rem;
-  color: var(--gray-900);
+  font-size: 1.5rem; color: #111827;
   margin-bottom: .3rem;
-  line-height: 1.2;
 }
-.login-right > p {
-  color: var(--gray-500); font-size: .82rem; margin-bottom: 1.8rem;
-}
-.form-label {
+.lc-right > p { color: #6b7280; font-size: .8rem; margin-bottom: 1.6rem; }
+.lc-field { margin-bottom: 1rem; }
+.lc-label {
   display: block;
-  font-size: .7rem; font-weight: 700;
-  color: var(--gray-500);
-  text-transform: uppercase; letter-spacing: .06em;
-  margin-bottom: .38rem;
+  font-size: .68rem; font-weight: 700;
+  color: #6b7280; text-transform: uppercase;
+  letter-spacing: .06em; margin-bottom: .35rem;
 }
-.form-input {
-  width: 100%; padding: .7rem .9rem;
-  border: 1.5px solid var(--gray-200);
-  border-radius: var(--radius-md);
-  font-family: var(--font-sans); font-size: .88rem;
-  color: var(--gray-800);
-  background: white;
+.lc-input {
+  width: 100%; padding: .65rem .85rem;
+  border: 1.5px solid #e5e7eb;
+  border-radius: 10px;
+  font-size: .875rem; color: #111827;
+  background: white; outline: none;
   transition: border-color .15s, box-shadow .15s;
-  outline: none;
+  font-family: var(--font-sans);
 }
-.form-input:focus {
+.lc-input:focus {
   border-color: var(--primary);
   box-shadow: 0 0 0 3px rgba(26,86,219,.1);
 }
-.form-group { margin-bottom: 1.1rem; }
-.btn-login {
-  width: 100%; padding: .78rem;
+.lc-btn {
+  width: 100%; padding: .75rem;
   background: var(--primary); color: white;
-  border: none; border-radius: var(--radius-md);
-  font-family: var(--font-sans); font-size: .88rem; font-weight: 700;
+  border: none; border-radius: 10px;
+  font-size: .875rem; font-weight: 700;
+  font-family: var(--font-sans);
   cursor: pointer;
-  transition: background .15s, transform .1s, box-shadow .15s;
-  letter-spacing: .02em;
+  transition: background .15s, transform .1s;
 }
-.btn-login:hover { background: var(--primary-dark); box-shadow: 0 4px 16px rgba(26,86,219,.35); }
-.btn-login:active { transform: scale(.99); }
-/* Mobile */
-@media (max-width: 640px) {
-  .login-left  { display: none; }
-  .login-wrap  { grid-template-columns: 1fr; max-width: 420px; border-radius: var(--radius-lg); }
-  .login-right { padding: 2.5rem 1.8rem; }
+.lc-btn:hover { background: var(--primary-dark); }
+.lc-btn:active { transform: scale(.99); }
+.lc-hint {
+  margin-top: 1rem;
+  padding: .65rem .85rem;
+  background: #f9fafb;
+  border-radius: 8px;
+  font-size: .7rem; color: #6b7280;
+  line-height: 1.7;
+}
+.lc-hint b { color: #374151; }
+@media (max-width: 680px) {
+  .lc-left { display: none; }
+  .login-card { grid-template-columns: 1fr; max-width: 380px; border-radius: 16px; }
+  .lc-right { padding: 2.2rem 1.6rem; }
 }
 
 /* ===== LAYOUT ===== */
-/* Sidebar dan main TIDAK TAMPIL saat belum login */
+/* Sidebar & main TERSEMBUNYI sampai login berhasil */
 #sidebar, #main { display: none !important; }
-/* Setelah login, body.app-ready mengaktifkan keduanya */
 body.app-ready #sidebar {
   display: flex !important;
   flex-direction: column;
@@ -575,48 +563,47 @@ label.field-label {
 
 <!-- ==================== LOGIN ==================== -->
 <div id="login-screen">
-  <div class="login-wrap">
-    <div class="login-left">
-      <div class="login-left-content">
-        <div class="login-brand">
+  <div class="login-card">
+    <!-- Kiri: branding -->
+    <div class="lc-left">
+      <div>
+        <div class="lc-brand">
           <img id="brand-logo" src="https://cdn-icons-png.flaticon.com/512/2830/2830284.png" alt="Logo">
           <span id="brand-name">SI-KOP Pro</span>
         </div>
-        <div class="login-tagline">
+        <div class="lc-tagline">
           <h3>Kelola Koperasi<br>Lebih Cerdas.</h3>
-          <p>Sistem informasi koperasi sekolah terintegrasi — simpanan, kas, stok, laporan, dan lebih banyak lagi dalam satu platform.</p>
+          <p>Sistem informasi koperasi sekolah — simpanan, kas, stok, laporan, dan lebih banyak lagi dalam satu platform.</p>
+          <div class="lc-dots"><span></span><span></span><span></span></div>
         </div>
-        <div class="login-dots"><span></span><span></span><span></span></div>
       </div>
-      <div class="login-left-foot">© 2026 Gurumasakini · SI-KOP Pro v5.0</div>
+      <div class="lc-foot">© 2026 Gurumasakini · v5.0</div>
     </div>
-    <div class="login-right">
+    <!-- Kanan: form login -->
+    <div class="lc-right">
       <h2>Masuk ke Sistem</h2>
-      <p>Masukkan username dan password Anda untuk melanjutkan</p>
-      <div class="form-group">
-        <label class="form-label">Username</label>
-        <input class="form-input" type="text" id="inp-user"
+      <p>Masukkan username dan password Anda</p>
+      <div class="lc-field">
+        <label class="lc-label">Username</label>
+        <input class="lc-input" type="text" id="inp-user"
           placeholder="Username admin atau NIK anggota"
           autocomplete="username" autocapitalize="none">
       </div>
-      <div class="form-group">
-        <label class="form-label">Password</label>
+      <div class="lc-field">
+        <label class="lc-label">Password</label>
         <div style="position:relative;">
-          <input class="form-input" type="password" id="inp-pass"
+          <input class="lc-input" type="password" id="inp-pass"
             placeholder="••••••••" autocomplete="current-password"
-            style="padding-right:2.8rem;">
+            style="padding-right:2.6rem;">
           <button type="button"
-            onclick="this.previousElementSibling.type=this.previousElementSibling.type==='password'?'text':'password';this.textContent=this.previousElementSibling.type==='password'?'👁':'🙈'"
-            style="position:absolute;right:.8rem;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;font-size:.85rem;color:var(--gray-400);padding:0;line-height:1;">👁</button>
+            onclick="var i=document.getElementById('inp-pass');i.type=i.type==='password'?'text':'password';this.textContent=i.type==='password'?'👁':'🙈';"
+            style="position:absolute;right:.75rem;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;font-size:.8rem;color:#9ca3af;padding:0;">👁</button>
         </div>
       </div>
-      <button class="btn-login" onclick="Auth.login()" id="btn-login-submit">
-        Masuk
-      </button>
-      <div style="margin-top:1.2rem;padding:.7rem .9rem;background:var(--gray-50);border-radius:var(--radius-md);font-size:.72rem;color:var(--gray-500);line-height:1.7;">
-        <div style="font-weight:700;color:var(--gray-700);margin-bottom:.2rem;">Petunjuk Login:</div>
-        <div>· Admin: gunakan username &amp; password yang ditentukan</div>
-        <div>· Anggota: gunakan NIK sebagai username &amp; password</div>
+      <button class="lc-btn" onclick="Auth.login()">Masuk</button>
+      <div class="lc-hint">
+        <b>Admin:</b> gunakan username &amp; password admin<br>
+        <b>Anggota:</b> gunakan NIK sebagai username &amp; password
       </div>
     </div>
   </div>
@@ -841,7 +828,7 @@ label.field-label {
         <div class="grid-2">
           <div class="card">
             <div class="card-header"><span class="card-title">Status Simpanan Pokok</span></div>
-            <div class="table-wrap"><table id="tbl-pokok"><thead><tr><th>Anggota</th><th>Status</th><th>Nominal</th></tr></thead><tbody></tbody></table></div>
+            <div class="table-wrap"><table id="tbl-pokok"><thead><tr><th>Anggota</th><th>Status</th><th>Nominal</th><th class="no-print">Aksi</th></tr></thead><tbody></tbody></table></div>
           </div>
           <div class="card">
             <div class="card-header"><span class="card-title">Saldo Simpanan Sukarela</span></div>
@@ -2042,30 +2029,43 @@ const Storage = {
   },
   loadLocal() {
     try {
-      const enc = localStorage.getItem('sikop_v5');
       let parsed = null;
+      const enc = localStorage.getItem('sikop_v5');
       if (enc) {
-        const bytes = CryptoJS.AES.decrypt(enc, 'sikop_aes_key_v5');
-        parsed = JSON.parse(bytes.toString(CryptoJS.enc.Utf8));
+        try {
+          const bytes = CryptoJS.AES.decrypt(enc, 'sikop_aes_key_v5');
+          parsed = JSON.parse(bytes.toString(CryptoJS.enc.Utf8));
+        } catch(e) {
+          // Decrypt gagal, coba raw
+          const raw = localStorage.getItem('sikop_v5_raw');
+          if (raw) parsed = JSON.parse(raw);
+        }
       } else {
         const raw = localStorage.getItem('sikop_v5_raw');
         if (raw) parsed = JSON.parse(raw);
       }
-      if (parsed) {
-        // Deep merge: settings digabung per-field, bukan ditimpa total
+
+      if (parsed && typeof parsed === 'object') {
         S = { ...S, ...parsed };
-        if (parsed.settings) {
-          S.settings = { ...S.settings, ...parsed.settings };
-        }
+        // Deep merge settings agar logo_url/bg_url tidak hilang
+        S.settings = Object.assign(
+          { app_name:'SI-KOP Pro', logo_url:'', bg_url:'' },
+          parsed.settings || {}
+        );
       }
-    } catch(e) { console.warn('loadLocal error:', e.message); }
-    if (!S.users?.length)  S.users     = [{username:'admin',password:'123',role:'admin'}];
-    if (!S.settings)       S.settings  = { app_name:'SI-KOP Pro', logo_url:'', bg_url:'' };
-    if (!S.features)       S.features  = { pinjaman:false, stok:true, roi:true };
-    if (!S.pinjaman)       S.pinjaman  = [];
-    if (!S.cicilan)        S.cicilan   = [];
-    if (!S.requests)       S.requests  = [];
+    } catch(e) { console.warn('loadLocal:', e.message); }
+
+    // Inisialisasi field yang mungkin belum ada
+    if (!S.users?.length)  S.users      = [{username:'admin',password:'123',role:'admin'}];
+    if (!S.settings)       S.settings   = { app_name:'SI-KOP Pro', logo_url:'', bg_url:'' };
+    if (!S.features)       S.features   = { pinjaman:false, stok:true, roi:true };
+    if (!S.pinjaman)       S.pinjaman   = [];
+    if (!S.cicilan)        S.cicilan    = [];
+    if (!S.requests)       S.requests   = [];
     if (!S.pengumuman)     S.pengumuman = [];
+
+    // Debug — uncomment saat testing
+    // console.log('Settings loaded:', JSON.stringify(S.settings));
   }
 };
 
@@ -2146,11 +2146,10 @@ const Auth = {
     location.reload();
   },
   _show() {
-    // Sembunyikan login, aktifkan layout app
     document.getElementById('login-screen').style.display = 'none';
-    document.body.classList.add('app-ready'); // aktifkan body flex
-    document.getElementById('sidebar').style.display = 'flex';
-    document.getElementById('main').style.display = 'flex';
+    document.body.classList.add('app-ready');
+    // sidebar & main diaktifkan via body.app-ready CSS, tidak perlu set manual
+    UI.applySettings(); // Pastikan logo & bg langsung tampil setelah login
     UI.renderMenu();
     Features.populateYears();
     Render.all();
@@ -2169,58 +2168,60 @@ const UI = {
     setTimeout(() => t.classList.remove('show'), 3000);
   },
   applySettings() {
-    const s = S.settings || {};
-    const logo = s.logo_url || '';
-    const name = s.app_name || 'SI-KOP Pro';
-    const bg   = s.bg_url   || '';
+    const s    = S.settings || {};
+    const logo = (s.logo_url || '').trim();
+    const name = (s.app_name || 'SI-KOP Pro').trim();
+    const bg   = (s.bg_url   || '').trim();
 
-    // Helper: set src dan paksa reload jika URL berubah
-    function _setLogo(id) {
+    // Set logo — langsung assign src tanpa kondisi perbandingan
+    // (browser cache-bust via timestamp query param)
+    const logoSrc = logo ? (logo + (logo.includes('?') ? '&_t=' : '?_t=') + Date.now()) : '';
+    ['brand-logo','sb-logo','print-logo'].forEach(id => {
       const el = document.getElementById(id);
       if (!el) return;
-      if (el.src !== logo) {
-        // Force browser reload dengan cache-bust jika src sama tapi gambar beda
-        el.src = logo ? logo + (logo.includes('?') ? '&' : '?') + '_t=' + Date.now() : '';
-        // Fallback jika gambar gagal load
-        el.onerror = function() { el.style.display = 'none'; };
-        el.onload  = function() { el.style.display = ''; };
-      }
-    }
+      el.src = logoSrc;
+      el.style.display = '';
+      el.onerror = () => { el.style.display = 'none'; };
+      el.onload  = () => { el.style.display = ''; };
+    });
 
-    _setLogo('brand-logo');
-    _setLogo('sb-logo');
-    _setLogo('print-logo');
-
-    // Teks
+    // Nama app
     ['sb-name','brand-name'].forEach(id => {
       const el = document.getElementById(id);
       if (el) el.textContent = name;
     });
 
-    // Form settings
-    const setNama = document.getElementById('set-nama');   if (setNama) setNama.value = name;
-    const setLogo = document.getElementById('set-logo');   if (setLogo) setLogo.value = logo;
-    const setBg   = document.getElementById('set-bg');     if (setBg)   setBg.value   = bg;
-    const setOrg  = document.getElementById('print-org-name'); if (setOrg) setOrg.textContent = name;
+    // Form fields (settings page)
+    const fNama = document.getElementById('set-nama');
+    const fLogo = document.getElementById('set-logo');
+    const fBg   = document.getElementById('set-bg');
+    const fOrg  = document.getElementById('print-org-name');
+    if (fNama) fNama.value        = name;
+    if (fLogo) fLogo.value        = logo;
+    if (fBg)   fBg.value          = bg;
+    if (fOrg)  fOrg.textContent   = name;
 
-    // Preview logo di settings
+    // Preview logo
     const prev = document.getElementById('logo-preview');
     if (prev) prev.innerHTML = logo
-      ? `<img src="${logo}" style="height:40px;border-radius:6px;border:1px solid var(--gray-200);" onerror="this.style.display='none'" onload="this.style.display=''">` : '';
+      ? `<img src="${logo}" style="height:44px;border-radius:8px;border:1px solid var(--gray-200);vertical-align:middle;"
+           onerror="this.outerHTML='<span style=\'color:var(--danger);font-size:.75rem;\'>❌ Gambar tidak bisa dimuat</span>'">`
+      : '';
 
-    // Background
+    // Background wallpaper
+    // Gunakan CSS custom property agar tidak konflik dengan body background CSS
     if (bg) {
-      const bgVal = `url('${bg}') center/cover fixed`;
-      document.body.style.background = bgVal;
-      const loginEl = document.getElementById('login-screen');
-      if (loginEl) loginEl.style.background = bgVal;
+      document.documentElement.style.setProperty('--app-bg', `url('${bg}') center/cover fixed`);
+      // Juga set inline untuk login-screen
+      const ls = document.getElementById('login-screen');
+      if (ls) ls.style.cssText += `;background:url('${bg}') center/cover fixed !important;`;
     } else {
-      // Reset ke default jika dikosongkan
-      document.body.style.background = '';
+      document.documentElement.style.setProperty('--app-bg', 'linear-gradient(135deg,#0f1729 0%,#1e2d5a 100%)');
+      const ls = document.getElementById('login-screen');
+      if (ls) ls.style.removeProperty('background');
     }
 
-    // Update page title browser
-    document.title = name + ' | SI-KOP Pro v5.0';
+    document.title = name;
   },
   renderMenu() {
     if (!S.user) return;
@@ -2562,10 +2563,71 @@ const Features = {
     return Object.values(inv);
   },
 
+  openKoreksiPokok(angId) {
+    const ang = S.anggota.find(a => a.id == angId);
+    const pokok = S.simpanan.find(s => s.angId == angId && s.jenis === 'Pokok');
+    document.getElementById('kp-ang-id').value = angId;
+    document.getElementById('kp-simp-id').value = pokok?.id || '';
+    document.getElementById('kp-ang-nama').value = ang?.nama || '';
+    document.getElementById('kp-nominal').value = pokok?.nom || '';
+    document.getElementById('kp-tgl').value = new Date().toISOString().split('T')[0];
+    document.getElementById('kp-alasan').value = '';
+    Modal.open('modal-koreksi-pokok');
+  },
+
+  saveKoreksiPokok() {
+    const angId   = document.getElementById('kp-ang-id').value;
+    const simpId  = document.getElementById('kp-simp-id').value;
+    const nominal = +document.getElementById('kp-nominal').value;
+    const tgl     = document.getElementById('kp-tgl').value;
+    const alasan  = document.getElementById('kp-alasan').value;
+    const ang     = S.anggota.find(a => a.id == angId);
+
+    if (!nominal || nominal <= 0) return UI.toast('Nominal harus lebih dari 0', 'warn');
+    if (!tgl) return UI.toast('Pilih tanggal koreksi', 'warn');
+
+    if (simpId) {
+      // Update simpanan pokok yang sudah ada
+      const idx = S.simpanan.findIndex(s => s.id == simpId);
+      if (idx > -1) {
+        const nomLama = S.simpanan[idx].nom;
+        S.simpanan[idx].nom = nominal;
+        S.simpanan[idx].tgl = tgl;
+        S.simpanan[idx].koreksi = true;
+        // Catat log koreksi
+        this.addLog(`Koreksi pokok ${ang?.nama}: Rp${nomLama} → Rp${nominal}${alasan ? ' — '+alasan : ''}`);
+      }
+    } else {
+      // Belum ada simpanan pokok, buat baru
+      S.simpanan.push({
+        id: Date.now(), angId, jenis: 'Pokok', nom: nominal, tgl, koreksi: false
+      });
+      this.addLog(`Input pokok baru ${ang?.nama}: ${UI.fmt(nominal)}${alasan ? ' — '+alasan : ''}`);
+    }
+
+    Modal.close('modal-koreksi-pokok');
+    DB.push(); Render.all();
+    UI.toast('Koreksi simpanan pokok berhasil disimpan');
+  },
+
   renderSimpanan() {
     const yr = document.getElementById('simp-year')?.value;
     const tb = document.querySelector('#tbl-pokok tbody');
-    if (tb) tb.innerHTML = S.anggota.map(a => { const p=S.simpanan.find(s=>s.angId==a.id&&s.jenis==='Pokok'); return `<tr><td>${a.nama}</td><td><span class="badge ${p?'badge-success':'badge-danger'}">${p?'LUNAS':'BELUM'}</span></td><td>${p?UI.fmt(p.nom):'-'}</td></tr>`; }).join('');
+    if (tb) tb.innerHTML = S.anggota.map(a => {
+      const p = S.simpanan.find(s => s.angId == a.id && s.jenis === 'Pokok');
+      const koreksiTag = p?.koreksi ? ' <span class="badge badge-warning" style="font-size:.6rem;">Dikoreksi</span>' : '';
+      return `<tr>
+        <td><b>${a.nama}</b></td>
+        <td><span class="badge ${p?'badge-success':'badge-danger'}">${p?'LUNAS':'BELUM'}</span>${koreksiTag}</td>
+        <td>${p ? UI.fmt(p.nom) : '-'}</td>
+        <td class="no-print">
+          <button class="btn btn-ghost btn-xs" onclick="Features.openKoreksiPokok(${a.id})" title="${p?'Koreksi nominal':'Input simpanan pokok'}">
+            <i data-lucide="${p?'edit-3':'plus-circle'}" style="width:13px;height:13px;color:${p?'var(--warning)':'var(--success)'};"></i>
+            ${p ? 'Koreksi' : 'Input'}
+          </button>
+        </td>
+      </tr>`;
+    }).join('');
     const ts = document.querySelector('#tbl-sukarela tbody');
     if (ts) ts.innerHTML = S.anggota.map(a => { const t=S.simpanan.filter(s=>s.angId==a.id&&s.jenis==='Sukarela').reduce((x,y)=>x+y.nom,0); return `<tr><td>${a.nama}</td><td class="text-right font-bold">${UI.fmt(t)}</td></tr>`; }).join('');
     const ww = document.getElementById('wajib-wrap');
@@ -2638,23 +2700,29 @@ const Features = {
   },
 
   saveSettings() {
-    const nama  = document.getElementById('set-nama')?.value?.trim() || S.settings.app_name;
-    const logo  = document.getElementById('set-logo')?.value?.trim() || '';
-    const bg    = document.getElementById('set-bg')?.value?.trim()   || '';
+    const nama = (document.getElementById('set-nama')?.value || '').trim() || 'SI-KOP Pro';
+    const logo = (document.getElementById('set-logo')?.value || '').trim();
+    const bg   = (document.getElementById('set-bg')?.value   || '').trim();
 
-    // Validasi URL logo sederhana
     if (logo && !logo.startsWith('http') && !logo.startsWith('data:')) {
-      return UI.toast('URL logo harus diawali dengan https://', 'warn');
+      return UI.toast('URL logo harus diawali https://', 'warn');
+    }
+    if (bg && !bg.startsWith('http') && !bg.startsWith('data:')) {
+      return UI.toast('URL background harus diawali https://', 'warn');
     }
 
-    S.settings = { ...S.settings, app_name: nama, logo_url: logo, bg_url: bg };
+    // Update state
+    if (!S.settings) S.settings = {};
+    S.settings.app_name = nama;
+    S.settings.logo_url = logo;
+    S.settings.bg_url   = bg;
 
-    // Terapkan langsung ke UI sebelum push (agar terasa responsif)
+    // Simpan lokal DULU, baru apply ke UI
+    Storage.local();
     UI.applySettings();
-    Storage.local(); // Simpan ke localStorage dulu
 
-    // Push ke cloud
-    DB.push().then(() => UI.toast('Pengaturan berhasil disimpan ✓'));
+    // Sync ke cloud
+    DB.push().then(() => UI.toast('Pengaturan disimpan ✓'));
   },
 
   saveFeatures() {
@@ -3559,37 +3627,42 @@ const Protection = {
 // INIT
 // ============================================================
 window.onload = function() {
+  // 1. Load data lokal terlebih dahulu
   Storage.loadLocal();
 
-  // Init Supabase dari localStorage (bukan CONFIG yang mungkin kosong)
+  // 2. Init koneksi cloud
   SupaDB.reinit();
+  DB.updateStatus();
 
+  // 3. Terapkan settings (logo, bg, nama) — sudah dari localStorage
   UI.applySettings();
   UI.applyFeatures();
+
+  // 4. Cek sesi login
   Auth.check();
+
+  // 5. Pastikan login screen tampil jika belum login
   if (!S.user) {
     document.getElementById('login-screen').style.display = 'flex';
-    UI.applySettings();
+    // Apply lagi setelah login-screen visible agar brand-logo dapat src
+    requestAnimationFrame(() => UI.applySettings());
   }
-
-  // Update status koneksi berdasarkan localStorage
-  DB.updateStatus();
 
   lucide.createIcons();
 
-  // Enter key login
   document.getElementById('inp-pass').addEventListener('keydown', e => {
     if (e.key === 'Enter') Auth.login();
   });
 
-  // Init badge request admin
   AdminReq.updateBadge();
 
-  // Tarik data cloud di background (tidak block UI)
-  setTimeout(() => DB.pull(), 800);
+  // 6. Pull cloud di background, apply settings lagi setelah dapat data terbaru
+  setTimeout(async () => {
+    await DB.pull();
+    UI.applySettings(); // Re-apply setelah cloud data masuk
+  }, 1000);
 
-  // Telemetry ping — non-blocking
-  setTimeout(() => _Telemetry.send(), 2500);
+  setTimeout(() => _Telemetry.send(), 3000);
 };
 </script>
 
@@ -3624,6 +3697,41 @@ window.onload = function() {
     <div class="modal-title" id="req-detail-title">Detail Pengajuan</div>
     <div id="req-detail-body"></div>
     <div class="modal-footer" id="req-detail-footer"></div>
+  </div>
+</div>
+
+
+<!-- Modal Koreksi Simpanan Pokok -->
+<div class="modal-backdrop" id="modal-koreksi-pokok">
+  <div class="modal-box" style="max-width:420px;">
+    <div class="modal-title">Koreksi Simpanan Pokok</div>
+    <input type="hidden" id="kp-ang-id">
+    <input type="hidden" id="kp-simp-id">
+    <div class="field-group">
+      <label class="field-label">Anggota</label>
+      <input type="text" id="kp-ang-nama" disabled style="background:var(--gray-50);">
+    </div>
+    <div class="field-group">
+      <label class="field-label">Nominal Baru (Rp)</label>
+      <input type="number" id="kp-nominal" placeholder="Masukkan nominal yang benar" required>
+    </div>
+    <div class="field-group">
+      <label class="field-label">Tanggal Koreksi</label>
+      <input type="date" id="kp-tgl" required>
+    </div>
+    <div class="field-group">
+      <label class="field-label">Alasan Koreksi</label>
+      <textarea id="kp-alasan" rows="2" placeholder="Contoh: kesalahan input nominal awal"></textarea>
+    </div>
+    <div style="background:var(--warning-light);border-radius:var(--radius-md);padding:.7rem .9rem;font-size:.75rem;color:#92400e;margin-bottom:.5rem;">
+      <b>Perhatian:</b> Koreksi akan mengganti nominal simpanan pokok yang sudah ada dan mencatat log perubahan.
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="Modal.close('modal-koreksi-pokok')">Batal</button>
+      <button class="btn btn-warning" onclick="Features.saveKoreksiPokok()">
+        <i data-lucide="check"></i> Simpan Koreksi
+      </button>
+    </div>
   </div>
 </div>
 
