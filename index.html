@@ -89,12 +89,23 @@ body {
   background: var(--app-bg);
   background-size: cover;
   background-attachment: fixed;
+  /* Pastikan tidak ada celah — body flex tidak boleh bocor */
+  min-height: 100vh;
+  min-width: 100vw;
+}
+/* Overlay gelap untuk pastikan background terlihat */
+#login-screen::before {
+  content: '';
+  position: absolute; inset: 0;
+  background: rgba(0,0,0,.35);
+  z-index: 0;
 }
 .login-wrap {
   display: grid; grid-template-columns: 1fr 1fr;
-  width: 860px; max-width: 95vw;
+  width: 860px; max-width: 92vw;
   background: white; border-radius: var(--radius-xl);
-  overflow: hidden; box-shadow: var(--shadow-lg);
+  overflow: hidden; box-shadow: 0 25px 60px rgba(0,0,0,.5);
+  position: relative; z-index: 1;  /* di atas overlay */
 }
 .login-left {
   background: var(--sidebar-bg);
@@ -423,24 +434,19 @@ label.field-label {
 
 /* ===== MEMBER PAGES ===== */
 /* Sub nav item — indent untuk Penarikan & Ubah Rekening */
+/* Sub-menu indent untuk aksi pengajuan */
 #nav-member-penarikan,
 #nav-member-rekening {
-  padding-left: 2rem;
-  font-size: .76rem;
+  padding-left: 1.8rem;
+  font-size: .77rem;
+  opacity: .85;
 }
+#nav-member-penarikan:hover,
+#nav-member-rekening:hover { opacity: 1; }
 #nav-member-penarikan .nav-icon,
-#nav-member-rekening .nav-icon {
-  width: 14px; height: 14px;
-}
-#nav-member-penarikan::before,
-#nav-member-rekening::before {
-  content: '';
-  position: absolute;
-  left: 1.1rem;
-  width: 1px;
-  height: 100%;
-  background: rgba(255,255,255,.1);
-}
+#nav-member-rekening .nav-icon { width: 13px; height: 13px; }
+/* Login screen — pastikan background tidak ada putih */
+body { isolation: isolate; }
 
 .request-status-pending  { background:#fef3c7; color:#92400e; }
 .request-status-approved { background:#d1fae5; color:#065f46; }
@@ -507,19 +513,32 @@ label.field-label {
     </div>
     <div class="login-right">
       <h2>Masuk ke Sistem</h2>
-      <p>Masukkan username dan password Anda</p>
+      <p>Masukkan username dan password Anda untuk melanjutkan</p>
       <div class="form-group">
-        <label class="form-label">Username / NIK Anggota</label>
-        <input class="form-input" type="text" id="inp-user" placeholder="admin atau NIK">
+        <label class="form-label">Username</label>
+        <input class="form-input" type="text" id="inp-user"
+          placeholder="Username admin atau NIK anggota"
+          autocomplete="username" autocapitalize="none">
       </div>
       <div class="form-group">
         <label class="form-label">Password</label>
-        <input class="form-input" type="password" id="inp-pass" placeholder="••••••••">
+        <div style="position:relative;">
+          <input class="form-input" type="password" id="inp-pass"
+            placeholder="••••••••" autocomplete="current-password"
+            style="padding-right:2.8rem;">
+          <button type="button"
+            onclick="this.previousElementSibling.type=this.previousElementSibling.type==='password'?'text':'password';this.textContent=this.previousElementSibling.type==='password'?'👁':'🙈'"
+            style="position:absolute;right:.8rem;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;font-size:.85rem;color:var(--gray-400);padding:0;line-height:1;">👁</button>
+        </div>
       </div>
-      <button class="btn-login" onclick="Auth.login()">
-        <span id="login-btn-text">Masuk</span>
+      <button class="btn-login" onclick="Auth.login()" id="btn-login-submit">
+        Masuk
       </button>
-      <p style="margin-top:1rem; font-size:.7rem; color:var(--gray-400); text-align:center;">Default: admin / 123</p>
+      <div style="margin-top:1.2rem;padding:.7rem .9rem;background:var(--gray-50);border-radius:var(--radius-md);font-size:.72rem;color:var(--gray-500);line-height:1.7;">
+        <div style="font-weight:700;color:var(--gray-700);margin-bottom:.2rem;">Petunjuk Login:</div>
+        <div>· Admin: gunakan username &amp; password yang ditentukan</div>
+        <div>· Anggota: gunakan NIK sebagai username &amp; password</div>
+      </div>
     </div>
   </div>
 </div>
@@ -575,7 +594,7 @@ label.field-label {
 
   <div id="menu-anggota" class="hidden">
     <div class="nav-section">
-      <div class="nav-section-title">Akun Saya</div>
+      <div class="nav-section-title">Utama</div>
       <div class="nav-item" id="nav-member-home" onclick="Nav.go('member-home',this)">
         <i data-lucide="layout-dashboard" class="nav-icon"></i> Dasbor
       </div>
@@ -584,22 +603,31 @@ label.field-label {
       </div>
     </div>
     <div class="nav-section">
+      <div class="nav-section-title">Info Rekening</div>
+      <div class="nav-item" id="nav-member-info-rekening" onclick="Nav.go('member-info-rekening',this)">
+        <i data-lucide="credit-card" class="nav-icon"></i> Info &amp; Edit Rekening
+      </div>
+    </div>
+    <div class="nav-section">
       <div class="nav-section-title">Pengajuan</div>
       <div class="nav-item" id="nav-member-request" onclick="Nav.go('member-request',this)">
-        <i data-lucide="send" class="nav-icon"></i> Ajukan Request
+        <i data-lucide="inbox" class="nav-icon"></i> Semua Pengajuan
         <span class="nav-badge" id="badge-req" style="display:none;">!</span>
       </div>
       <div class="nav-item" id="nav-member-penarikan" onclick="Member.goRequest('penarikan')">
         <i data-lucide="arrow-down-to-line" class="nav-icon"></i> Tarik Simpanan
       </div>
       <div class="nav-item" id="nav-member-rekening" onclick="Member.goRequest('ubah_rekening')">
-        <i data-lucide="credit-card" class="nav-icon"></i> Ubah Rekening
+        <i data-lucide="edit-3" class="nav-icon"></i> Ubah Rekening
       </div>
     </div>
     <div class="nav-section">
-      <div class="nav-section-title">Akun</div>
+      <div class="nav-section-title">Pengaturan Akun</div>
+      <div class="nav-item" id="nav-member-password" onclick="Nav.go('member-password',this)">
+        <i data-lucide="key-round" class="nav-icon"></i> Ganti Password
+      </div>
       <div class="nav-item" id="nav-member-profil" onclick="Nav.go('member-profil',this)">
-        <i data-lucide="user-pen" class="nav-icon"></i> Profil & Password
+        <i data-lucide="user-circle" class="nav-icon"></i> Profil Saya
       </div>
     </div>
   </div>
@@ -1125,8 +1153,8 @@ label.field-label {
         <div class="card">
           <div class="card-header">
             <span class="card-title">Info Rekening Saya</span>
-            <button class="btn btn-ghost btn-sm" onclick="Member.goRequest('ubah_rekening')">
-              <i data-lucide="edit-3" style="width:13px;"></i> Ubah
+            <button class="btn btn-ghost btn-sm" onclick="Nav.go('member-info-rekening',document.getElementById('nav-member-info-rekening'))">
+              <i data-lucide="edit-3" style="width:13px;"></i> Edit
             </button>
           </div>
           <div id="m-rekening-info" style="font-size:.85rem;line-height:2;color:var(--gray-700);"></div>
@@ -1246,39 +1274,122 @@ label.field-label {
       </div>
     </div>
 
+    <!-- ========= MEMBER INFO REKENING ========= -->
+    <div class="page" id="page-member-info-rekening">
+      <div class="page-inner">
+        <!-- Info rekening aktif -->
+        <div class="card" style="margin-bottom:1rem;">
+          <div class="card-header">
+            <span class="card-title">Info Rekening Saya</span>
+          </div>
+          <div id="m-rekening-detail" style="font-size:.9rem;"></div>
+        </div>
+        <!-- Form pengajuan ubah rekening langsung -->
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">Ajukan Perubahan Rekening</span>
+          </div>
+          <div style="background:var(--info-light);border-radius:var(--radius-md);padding:.75rem .9rem;margin-bottom:.9rem;font-size:.78rem;color:#075985;">
+            <b>Catatan:</b> Perubahan akan diverifikasi admin sebelum diterapkan.
+          </div>
+          <form onsubmit="Member.submitRequest(event,'ubah_rekening')">
+            <div class="form-row form-col-2">
+              <div class="field-group"><label class="field-label">Nama Bank Baru</label>
+                <input type="text" id="req-rek-bank2" placeholder="Contoh: BRI"></div>
+              <div class="field-group"><label class="field-label">No. Rekening Baru</label>
+                <input type="text" id="req-rek-no2" placeholder="Contoh: 1234567890"></div>
+            </div>
+            <div class="field-group"><label class="field-label">Nama Pemilik Rekening</label>
+              <input type="text" id="req-rek-nama2" required placeholder="Sesuai buku tabungan"></div>
+            <div class="field-group"><label class="field-label">Alasan Perubahan</label>
+              <textarea id="req-rek-ket2" rows="2" placeholder="Contoh: ganti bank, rekening lama ditutup"></textarea>
+            </div>
+            <button class="btn btn-info w-full" type="submit">
+              <i data-lucide="send"></i> Kirim Pengajuan Perubahan
+            </button>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <!-- ========= MEMBER PASSWORD ========= -->
+    <div class="page" id="page-member-password">
+      <div class="page-inner" style="max-width:520px;">
+        <div class="card">
+          <div class="card-header">
+            <div>
+              <div class="card-title">Ganti Password Login</div>
+              <div class="card-subtitle">Password baru berlaku mulai login berikutnya</div>
+            </div>
+            <i data-lucide="key-round" style="width:28px;height:28px;color:var(--primary);opacity:.4;"></i>
+          </div>
+          <form onsubmit="Member.gantiPassword(event)">
+            <div class="field-group">
+              <label class="field-label">Password Lama</label>
+              <div style="position:relative;">
+                <input type="password" id="m-pass-lama" required placeholder="Password saat ini" style="padding-right:2.8rem;">
+                <button type="button" onclick="Member.togglePass('m-pass-lama',this)"
+                  style="position:absolute;right:.8rem;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;font-size:.85rem;color:var(--gray-400);">👁</button>
+              </div>
+            </div>
+            <div class="field-group">
+              <label class="field-label">Password Baru</label>
+              <div style="position:relative;">
+                <input type="password" id="m-pass-baru" required placeholder="Minimal 6 karakter" style="padding-right:2.8rem;">
+                <button type="button" onclick="Member.togglePass('m-pass-baru',this)"
+                  style="position:absolute;right:.8rem;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;font-size:.85rem;color:var(--gray-400);">👁</button>
+              </div>
+            </div>
+            <div class="field-group">
+              <label class="field-label">Konfirmasi Password Baru</label>
+              <div style="position:relative;">
+                <input type="password" id="m-pass-konfirm" required placeholder="Ulangi password baru" style="padding-right:2.8rem;">
+                <button type="button" onclick="Member.togglePass('m-pass-konfirm',this)"
+                  style="position:absolute;right:.8rem;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;font-size:.85rem;color:var(--gray-400);">👁</button>
+              </div>
+            </div>
+            <button class="btn btn-primary w-full" type="submit" style="margin-top:.4rem;">
+              <i data-lucide="key-round"></i> Simpan Password Baru
+            </button>
+          </form>
+          <div style="margin-top:1rem;padding:.7rem .9rem;background:var(--warning-light);border-radius:var(--radius-md);font-size:.75rem;color:#92400e;">
+            <b>Tips keamanan:</b> Gunakan kombinasi huruf besar, huruf kecil, angka, minimal 8 karakter.
+          </div>
+        </div>
+      </div>
+    </div>
+
     <!-- ========= MEMBER PROFIL ========= -->
     <div class="page" id="page-member-profil">
-      <div class="page-inner">
-        <div class="grid-2">
-          <!-- Ganti Password -->
-          <div class="card">
-            <div class="card-header"><span class="card-title">Ganti Password Login</span></div>
-            <form onsubmit="Member.gantiPassword(event)">
-              <div class="field-group">
-                <label class="field-label">Password Lama</label>
-                <input type="password" id="m-pass-lama" required placeholder="Password saat ini">
-              </div>
-              <div class="field-group">
-                <label class="field-label">Password Baru</label>
-                <input type="password" id="m-pass-baru" required placeholder="Minimal 6 karakter">
-              </div>
-              <div class="field-group">
-                <label class="field-label">Konfirmasi Password Baru</label>
-                <input type="password" id="m-pass-konfirm" required placeholder="Ulangi password baru">
-              </div>
-              <button class="btn btn-primary w-full" type="submit"><i data-lucide="key-round"></i> Simpan Password Baru</button>
-            </form>
+      <div class="page-inner" style="max-width:680px;">
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">Profil Saya</span>
           </div>
-
-          <!-- Info Profil -->
-          <div class="card">
-            <div class="card-header"><span class="card-title">Profil Saya</span></div>
-            <div id="m-profil-detail" style="font-size:.85rem;"></div>
-            <div style="margin-top:1rem;padding-top:1rem;border-top:1px solid var(--gray-200);">
-              <div style="font-size:.72rem;font-weight:700;color:var(--gray-500);text-transform:uppercase;letter-spacing:.05em;margin-bottom:.5rem;">Username Login</div>
-              <div id="m-login-info" style="font-size:.85rem;font-family:monospace;background:var(--gray-50);padding:.5rem .8rem;border-radius:var(--radius-md);color:var(--gray-700);"></div>
-              <div style="font-size:.7rem;color:var(--gray-400);margin-top:.4rem;">Gunakan username ini untuk masuk ke aplikasi</div>
+          <!-- Avatar & nama -->
+          <div style="display:flex;align-items:center;gap:1rem;padding:.5rem 0 1.2rem;border-bottom:1px solid var(--gray-100);margin-bottom:1rem;">
+            <div id="m-profil-avatar" style="width:52px;height:52px;border-radius:50%;background:var(--primary);display:flex;align-items:center;justify-content:center;font-size:1.4rem;font-weight:700;color:white;flex-shrink:0;">A</div>
+            <div>
+              <div id="m-profil-nama" style="font-size:1rem;font-weight:700;color:var(--gray-900);"></div>
+              <div id="m-profil-jenis" style="font-size:.75rem;color:var(--gray-500);margin-top:2px;"></div>
             </div>
+          </div>
+          <!-- Detail rows -->
+          <div id="m-profil-detail" style="font-size:.85rem;"></div>
+          <!-- Username login box -->
+          <div style="margin-top:1.2rem;padding:.9rem 1rem;background:var(--primary-light);border-radius:var(--radius-md);border:1px solid rgba(26,86,219,.15);">
+            <div style="font-size:.7rem;font-weight:700;color:var(--primary);text-transform:uppercase;letter-spacing:.06em;margin-bottom:.4rem;">Username Login Anda</div>
+            <div id="m-login-info" style="font-size:.9rem;font-family:monospace;font-weight:600;color:var(--gray-800);"></div>
+            <div style="font-size:.7rem;color:var(--gray-500);margin-top:.3rem;">Gunakan username ini saat masuk ke aplikasi</div>
+          </div>
+          <!-- Quick actions -->
+          <div style="display:flex;gap:.6rem;margin-top:1rem;">
+            <button class="btn btn-primary btn-sm" onclick="Nav.go('member-password',document.getElementById('nav-member-password'))">
+              <i data-lucide="key-round"></i> Ganti Password
+            </button>
+            <button class="btn btn-ghost btn-sm" onclick="Nav.go('member-info-rekening',document.getElementById('nav-member-info-rekening'))">
+              <i data-lucide="credit-card"></i> Edit Rekening
+            </button>
           </div>
         </div>
       </div>
@@ -1970,6 +2081,9 @@ const UI = {
     this.applyFeatures();
     AdminReq.updateBadge();
     if (role === 'anggota') {
+      // Pastikan semua menu admin tersembunyi
+      document.getElementById('menu-admin').style.display = 'none';
+      document.getElementById('menu-anggota').style.display = '';
       Nav.go('member-home', document.getElementById('nav-member-home'));
     } else {
       Nav.go('dashboard', document.querySelector('[onclick*="dashboard"]'));
@@ -2037,7 +2151,8 @@ const Nav = {
     // Judul halaman yang ramah
     const _titles = {
       'member-home':'Dasbor Saya','member-riwayat':'Riwayat Transaksi',
-      'member-request':'Pengajuan','member-profil':'Profil & Password',
+      'member-request':'Pengajuan','member-profil':'Profil Saya',
+      'member-password':'Ganti Password','member-info-rekening':'Info Rekening',
       'requests':'Kelola Request','dashboard':'Dashboard',
       'anggota':'Data Anggota','simpanan':'Simpanan','kas':'Kas & Bank',
       'modal':'Modal & ROI','pinjaman':'Pinjaman','stok':'Stok Barang',
@@ -2051,7 +2166,9 @@ const Nav = {
     if (id === 'member-home')    Member.renderHome();
     if (id === 'member-riwayat') Member.renderRiwayat();
     if (id === 'member-request') Member.renderRequest();
-    if (id === 'member-profil')  Member.renderProfil();
+    if (id === 'member-profil')        Member.renderProfil();
+    if (id === 'member-password')      Member.renderProfil(); // load nama user
+    if (id === 'member-info-rekening') Member.renderInfoRekening();
     if (id === 'requests')       AdminReq.render();
     if (id === 'settings') {
       Pengumuman.renderAdmin();
@@ -2791,22 +2908,77 @@ const Member = {
       if (el) el.innerHTML = '<div style="color:var(--gray-400);padding:1rem;">Data profil tidak ditemukan. Hubungi admin.</div>';
       return;
     }
+    // Avatar & nama
+    const avatarEl = document.getElementById('m-profil-avatar');
+    if (avatarEl) avatarEl.textContent = (ang.nama||'A')[0].toUpperCase();
+    const namaEl = document.getElementById('m-profil-nama');
+    if (namaEl) namaEl.textContent = ang.nama;
+    const jenisEl = document.getElementById('m-profil-jenis');
+    if (jenisEl) jenisEl.textContent = 'Anggota ' + (ang.jenis||'Reguler') + ' · No. ' + (ang.no||'-');
+
+    // Detail rows
     const el = document.getElementById('m-profil-detail');
     if (el) el.innerHTML = [
-      ['Nama',        ang.nama],
-      ['No. Anggota', ang.no||'-'],
-      ['NIK',         ang.nik],
-      ['Jenis',       ang.jenis],
-      ['Bank',        ang.bank||'-'],
-      ['Rekening',    ang.rek||'-'],
+      ['NIK',           ang.nik||'-'],
+      ['No. Anggota',   ang.no||'-'],
+      ['Jenis',         ang.jenis||'-'],
+      ['Bank',          ang.bank||'-'],
+      ['No. Rekening',  ang.rek||'-'],
     ].map(([k,v]) => `
-      <div style="display:flex;justify-content:space-between;padding:.4rem 0;border-bottom:1px solid var(--gray-100);font-size:.83rem;">
-        <span style="color:var(--gray-500);">${k}</span>
-        <span style="font-weight:600;">${v}</span>
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:.5rem 0;border-bottom:1px solid var(--gray-100);font-size:.83rem;">
+        <span style="color:var(--gray-500);min-width:120px;">${k}</span>
+        <span style="font-weight:600;text-align:right;">${v}</span>
       </div>`).join('');
 
     const li = document.getElementById('m-login-info');
-    if (li) li.textContent = (ang.login_username || ang.nik) + ' / ••••••';
+    if (li) li.textContent = ang.login_username || ang.nik;
+  },
+
+  // Render halaman info rekening
+  renderInfoRekening() {
+    if (!S.user || S.user.role !== 'anggota') return;
+    const ang = S.anggota.find(a => String(a.id) === String(S.user.id));
+    const el = document.getElementById('m-rekening-detail');
+    if (!el) return;
+    if (!ang) { el.innerHTML = '<div style="color:var(--gray-400);padding:1rem;">Data tidak ditemukan.</div>'; return; }
+
+    const hasRek = ang.bank || ang.rek;
+    el.innerHTML = hasRek ? `
+      <div style="display:flex;align-items:center;gap:1rem;padding:.8rem;background:var(--gray-50);border-radius:var(--radius-md);">
+        <div style="width:44px;height:44px;background:var(--info-light);border-radius:10px;display:flex;align-items:center;justify-content:center;">
+          <i data-lucide="building-2" style="width:22px;height:22px;color:var(--info);"></i>
+        </div>
+        <div>
+          <div style="font-size:.75rem;color:var(--gray-500);font-weight:600;text-transform:uppercase;letter-spacing:.04em;">Bank</div>
+          <div style="font-size:1rem;font-weight:700;color:var(--gray-900);">${ang.bank||'-'}</div>
+        </div>
+      </div>
+      <div style="margin-top:.8rem;padding:.8rem;background:var(--gray-50);border-radius:var(--radius-md);">
+        <div style="font-size:.75rem;color:var(--gray-500);font-weight:600;text-transform:uppercase;letter-spacing:.04em;margin-bottom:.3rem;">Nomor Rekening</div>
+        <div style="font-size:1.1rem;font-weight:700;font-family:monospace;color:var(--gray-900);letter-spacing:.05em;">${ang.rek||'-'}</div>
+      </div>
+      <div style="margin-top:.5rem;font-size:.75rem;color:var(--gray-400);padding:.3rem .2rem;">Nama pemilik sesuai buku tabungan: <b>${ang.nama}</b></div>
+    ` : `
+      <div style="text-align:center;padding:1.5rem;color:var(--gray-400);">
+        <i data-lucide="credit-card" style="width:36px;height:36px;margin-bottom:.5rem;opacity:.3;"></i>
+        <div>Belum ada data rekening.</div>
+        <div style="font-size:.75rem;margin-top:.3rem;">Isi form di bawah untuk mengajukan penambahan rekening.</div>
+      </div>`;
+
+    // Pre-fill form dengan data lama (jika ada)
+    if (ang.bank) {
+      const bEl = document.getElementById('req-rek-bank2');
+      if (bEl && !bEl.value) bEl.value = ang.bank;
+    }
+    lucide.createIcons();
+  },
+
+  // Toggle show/hide password
+  togglePass(inputId, btn) {
+    const inp = document.getElementById(inputId);
+    if (!inp) return;
+    inp.type = inp.type === 'password' ? 'text' : 'password';
+    btn.textContent = inp.type === 'password' ? '👁' : '🙈';
   },
 
   // Submit request (penarikan atau ubah_rekening)
@@ -2825,10 +2997,16 @@ const Member = {
       detail = `${jenis} — ${UI.fmt(nom)} — "${ket}"`;
       data = { jenis, nom, ket };
     } else {
-      const bank  = document.getElementById('req-rek-bank').value.trim();
-      const noRek = document.getElementById('req-rek-no').value.trim();
-      const nama  = document.getElementById('req-rek-nama').value.trim();
-      const ket   = document.getElementById('req-rek-ket').value;
+      // Support dua form: dari member-request (req-rek-bank)
+      // dan dari member-info-rekening (req-rek-bank2)
+      const bank  = (document.getElementById('req-rek-bank2')?.value ||
+                     document.getElementById('req-rek-bank')?.value || '').trim();
+      const noRek = (document.getElementById('req-rek-no2')?.value ||
+                     document.getElementById('req-rek-no')?.value || '').trim();
+      const nama  = (document.getElementById('req-rek-nama2')?.value ||
+                     document.getElementById('req-rek-nama')?.value || '').trim();
+      const ket   = (document.getElementById('req-rek-ket2')?.value ||
+                     document.getElementById('req-rek-ket')?.value || '');
       if (!bank)  return UI.toast('Masukkan nama bank', 'warn');
       if (!noRek) return UI.toast('Masukkan nomor rekening', 'warn');
       if (!nama)  return UI.toast('Masukkan nama pemilik rekening', 'warn');
