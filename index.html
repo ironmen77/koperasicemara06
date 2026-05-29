@@ -796,6 +796,32 @@ label.field-label {
     <!-- ========= SIMPANAN ========= -->
     <div class="page" id="page-simpanan">
       <div class="page-inner">
+
+        <!-- REKAP TOTAL SIMPANAN -->
+        <div class="stats-grid" style="margin-bottom:1rem;">
+          <div class="stat-card" style="--stat-color:var(--primary)">
+            <div class="stat-label">Total Simpanan Pokok</div>
+            <div class="stat-value" id="simp-stat-pokok">Rp 0</div>
+            <div class="stat-sub" id="simp-stat-pokok-cnt">0 anggota lunas</div>
+          </div>
+          <div class="stat-card" style="--stat-color:var(--success)">
+            <div class="stat-label">Total Simpanan Wajib</div>
+            <div class="stat-value" id="simp-stat-wajib">Rp 0</div>
+            <div class="stat-sub" id="simp-stat-wajib-cnt">0 transaksi</div>
+          </div>
+          <div class="stat-card" style="--stat-color:var(--info)">
+            <div class="stat-label">Total Simpanan Sukarela</div>
+            <div class="stat-value" id="simp-stat-sukarela">Rp 0</div>
+            <div class="stat-sub" id="simp-stat-sukarela-cnt">0 transaksi</div>
+          </div>
+          <div class="stat-card" style="--stat-color:var(--accent)">
+            <div class="stat-label">Grand Total Simpanan</div>
+            <div class="stat-value" id="simp-stat-total">Rp 0</div>
+            <div class="stat-sub">Semua jenis</div>
+          </div>
+        </div>
+
+        <!-- INPUT + REKAP WAJIB -->
         <div class="grid-2" style="margin-bottom:1rem;">
           <div class="card">
             <div class="card-header"><span class="card-title">Input Simpanan</span></div>
@@ -825,14 +851,27 @@ label.field-label {
             <div class="table-wrap" id="wajib-wrap" style="max-height:280px;overflow-y:auto;"></div>
           </div>
         </div>
+
+        <!-- POKOK + SUKARELA -->
         <div class="grid-2">
           <div class="card">
-            <div class="card-header"><span class="card-title">Status Simpanan Pokok</span></div>
-            <div class="table-wrap"><table id="tbl-pokok"><thead><tr><th>Anggota</th><th>Status</th><th>Nominal</th><th class="no-print">Aksi</th></tr></thead><tbody></tbody></table></div>
+            <div class="card-header">
+              <span class="card-title">Status Simpanan Pokok</span>
+              <span id="simp-pokok-summary" style="font-size:.75rem;color:var(--gray-500);"></span>
+            </div>
+            <div class="table-wrap"><table id="tbl-pokok">
+              <thead><tr><th>Anggota</th><th>Status</th><th>Nominal</th><th class="no-print">Aksi</th></tr></thead>
+              <tbody></tbody>
+            </table></div>
           </div>
           <div class="card">
-            <div class="card-header"><span class="card-title">Saldo Simpanan Sukarela</span></div>
-            <div class="table-wrap"><table id="tbl-sukarela"><thead><tr><th>Anggota</th><th class="text-right">Saldo</th></tr></thead><tbody></tbody></table></div>
+            <div class="card-header">
+              <span class="card-title">Saldo Simpanan Sukarela</span>
+            </div>
+            <div class="table-wrap"><table id="tbl-sukarela">
+              <thead><tr><th>Anggota</th><th class="text-right">Saldo</th></tr></thead>
+              <tbody></tbody>
+            </table></div>
           </div>
         </div>
       </div>
@@ -841,28 +880,85 @@ label.field-label {
     <!-- ========= KAS & BANK ========= -->
     <div class="page" id="page-kas">
       <div class="page-inner">
+
+        <!-- REKAP SALDO -->
+        <div class="stats-grid" style="margin-bottom:1rem;">
+          <div class="stat-card" style="--stat-color:var(--info)">
+            <div class="stat-label">Saldo Bank</div>
+            <div class="stat-value" id="k-bank">Rp 0</div>
+            <div class="stat-sub" id="k-bank-sub">-</div>
+          </div>
+          <div class="stat-card" style="--stat-color:var(--success)">
+            <div class="stat-label">Kas Tunai</div>
+            <div class="stat-value" id="k-tunai">Rp 0</div>
+            <div class="stat-sub" id="k-tunai-sub">-</div>
+          </div>
+          <div class="stat-card" style="--stat-color:var(--primary)">
+            <div class="stat-label">Total Pemasukan</div>
+            <div class="stat-value" id="k-total-masuk">Rp 0</div>
+            <div class="stat-sub">Semua akun</div>
+          </div>
+          <div class="stat-card" style="--stat-color:var(--danger)">
+            <div class="stat-label">Total Pengeluaran</div>
+            <div class="stat-value" id="k-total-keluar">Rp 0</div>
+            <div class="stat-sub">Semua akun</div>
+          </div>
+        </div>
+
         <div class="grid-2" style="margin-bottom:1rem;">
+          <!-- FORM INPUT -->
           <div class="card">
             <div class="card-header"><span class="card-title">Catat Transaksi</span></div>
             <form onsubmit="Features.saveKas(event)">
-              <div class="field-group"><label class="field-label">Akun</label>
-                <select id="kas-akun"><option value="Bank">Rekening Bank</option><option value="Tunai">Kas Tunai</option></select>
+              <div class="form-row form-col-2">
+                <div class="field-group"><label class="field-label">Akun</label>
+                  <select id="kas-akun">
+                    <option value="Bank">Rekening Bank</option>
+                    <option value="Tunai">Kas Tunai</option>
+                  </select>
+                </div>
+                <div class="field-group"><label class="field-label">Jenis</label>
+                  <select id="kas-tipe">
+                    <option value="Masuk">Pemasukan / Setor</option>
+                    <option value="Keluar">Pengeluaran / Tarik</option>
+                  </select>
+                </div>
               </div>
-              <div class="field-group"><label class="field-label">Jenis</label>
-                <select id="kas-tipe"><option value="Masuk">Pemasukan / Setor</option><option value="Keluar">Pengeluaran / Tarik</option></select>
+              <div class="form-row form-col-2">
+                <div class="field-group"><label class="field-label">Nominal (Rp)</label><input type="number" id="kas-nom" required></div>
+                <div class="field-group"><label class="field-label">Tanggal</label><input type="date" id="kas-tgl-input"></div>
               </div>
-              <div class="field-group"><label class="field-label">Nominal (Rp)</label><input type="number" id="kas-nom" required></div>
               <div class="field-group"><label class="field-label">Keterangan</label><textarea id="kas-ket" required rows="2"></textarea></div>
               <button class="btn btn-primary w-full" type="submit"><i data-lucide="plus-circle"></i> Simpan Transaksi</button>
             </form>
           </div>
+
+          <!-- FILTER + RINGKASAN PER KATEGORI -->
           <div class="card">
-            <div class="stats-grid" style="grid-template-columns:1fr 1fr;margin-bottom:.8rem;">
-              <div class="stat-card" style="--stat-color:var(--info)"><div class="stat-label">Saldo Bank</div><div class="stat-value" id="k-bank">Rp 0</div></div>
-              <div class="stat-card" style="--stat-color:var(--success)"><div class="stat-label">Kas Tunai</div><div class="stat-value" id="k-tunai">Rp 0</div></div>
+            <div class="card-header">
+              <span class="card-title">Ringkasan per Akun</span>
             </div>
-            <div class="table-wrap" style="max-height:240px;overflow-y:auto;">
-              <table id="tbl-kas"><thead><tr><th>Tgl</th><th>Akun</th><th>Tipe</th><th class="text-right">Nominal</th><th>Ket</th></tr></thead><tbody></tbody></table>
+            <div id="kas-summary" style="margin-bottom:1rem;"></div>
+            <div class="card-header" style="margin-top:.5rem;margin-bottom:.5rem;">
+              <span class="card-title" style="font-size:.82rem;">Filter Mutasi</span>
+              <div style="display:flex;gap:.4rem;">
+                <select id="kas-filter-akun" onchange="Render.kas()" style="font-size:.75rem;padding:.25rem .5rem;width:auto;">
+                  <option value="semua">Semua Akun</option>
+                  <option value="Bank">Bank</option>
+                  <option value="Tunai">Tunai</option>
+                </select>
+                <select id="kas-filter-tipe" onchange="Render.kas()" style="font-size:.75rem;padding:.25rem .5rem;width:auto;">
+                  <option value="semua">Semua</option>
+                  <option value="Masuk">Masuk</option>
+                  <option value="Keluar">Keluar</option>
+                </select>
+              </div>
+            </div>
+            <div class="table-wrap" style="max-height:220px;overflow-y:auto;">
+              <table id="tbl-kas">
+                <thead><tr><th>Tgl</th><th>Akun</th><th>Tipe</th><th class="text-right">Nominal</th><th>Ket</th><th class="no-print"></th></tr></thead>
+                <tbody></tbody>
+              </table>
             </div>
           </div>
         </div>
@@ -1198,41 +1294,76 @@ label.field-label {
     <!-- ========= MEMBER HOME ========= -->
     <div class="page" id="page-member-home">
       <div class="page-inner">
-
-        <!-- Pengumuman Banner -->
+        <!-- Pengumuman -->
         <div id="m-pengumuman-wrap" style="margin-bottom:1rem;"></div>
 
         <!-- Stat Cards -->
-        <div class="stats-grid">
-          <div class="stat-card" style="--stat-color:var(--primary)"><div class="stat-label">Total Saldo Saya</div><div class="stat-value" id="m-total">Rp 0</div><div class="stat-sub">Pokok + Wajib + Sukarela</div></div>
-          <div class="stat-card" style="--stat-color:var(--success)"><div class="stat-label">Simpanan Pokok</div><div class="stat-value" id="m-pokok">Rp 0</div></div>
-          <div class="stat-card" style="--stat-color:var(--info)"><div class="stat-label">Simpanan Sukarela</div><div class="stat-value" id="m-sukarela">Rp 0</div></div>
-          <div class="stat-card" style="--stat-color:var(--accent)"><div class="stat-label">Wajib Lunas</div><div class="stat-value" id="m-wajib">0 bln</div></div>
+        <div class="stats-grid" style="margin-bottom:1rem;">
+          <div class="stat-card" style="--stat-color:var(--primary)">
+            <div class="stat-label">Total Saldo Saya</div>
+            <div class="stat-value" id="m-total">Rp 0</div>
+            <div class="stat-sub">Pokok + Wajib + Sukarela</div>
+          </div>
+          <div class="stat-card" style="--stat-color:var(--success)">
+            <div class="stat-label">Simpanan Pokok</div>
+            <div class="stat-value" id="m-pokok">Rp 0</div>
+            <div class="stat-sub" id="m-pokok-status">-</div>
+          </div>
+          <div class="stat-card" style="--stat-color:var(--info)">
+            <div class="stat-label">Simpanan Wajib</div>
+            <div class="stat-value" id="m-wajib-nom">Rp 0</div>
+            <div class="stat-sub" id="m-wajib">0 bulan lunas</div>
+          </div>
+          <div class="stat-card" style="--stat-color:var(--accent)">
+            <div class="stat-label">Simpanan Sukarela</div>
+            <div class="stat-value" id="m-sukarela">Rp 0</div>
+          </div>
         </div>
 
-        <!-- Wajib Bulanan -->
-        <div class="card" style="margin-bottom:1rem;">
+        <!-- Monitoring Keuangan: 2 kolom -->
+        <div class="grid-2" style="margin-bottom:1rem;">
+          <!-- Status Wajib Bulanan -->
+          <div class="card">
+            <div class="card-header">
+              <span class="card-title">Status Simpanan Wajib</span>
+              <select id="m-year" onchange="Member.renderHome()" style="width:auto;font-size:.78rem;padding:.25rem .5rem;"></select>
+            </div>
+            <div class="table-wrap">
+              <table id="tbl-m-wajib" style="text-align:center;">
+                <thead><tr><th>Jan</th><th>Feb</th><th>Mar</th><th>Apr</th><th>Mei</th><th>Jun</th><th>Jul</th><th>Agu</th><th>Sep</th><th>Okt</th><th>Nov</th><th>Des</th></tr></thead>
+                <tbody></tbody>
+              </table>
+            </div>
+            <div id="m-wajib-progress" style="margin-top:.8rem;"></div>
+          </div>
+
+          <!-- Info Rekening + ringkasan simpanan -->
+          <div class="card">
+            <div class="card-header">
+              <span class="card-title">Info Rekening</span>
+              <button class="btn btn-ghost btn-xs no-print" onclick="Nav.go('member-info-rekening',document.getElementById('nav-member-info-rekening'))">
+                <i data-lucide="edit-3" style="width:12px;"></i> Edit
+              </button>
+            </div>
+            <div id="m-rekening-info"></div>
+            <hr style="border:none;border-top:1px solid var(--gray-100);margin:.9rem 0;">
+            <div class="card-title" style="font-size:.8rem;margin-bottom:.6rem;">Ringkasan Simpanan</div>
+            <div id="m-simp-ringkasan"></div>
+          </div>
+        </div>
+
+        <!-- Riwayat terbaru -->
+        <div class="card">
           <div class="card-header">
-            <span class="card-title">Status Simpanan Wajib</span>
-            <select id="m-year" onchange="Member.renderHome()" style="width:auto;font-size:.8rem;"></select>
+            <span class="card-title">Transaksi Terbaru</span>
+            <button class="btn btn-ghost btn-xs" onclick="Nav.go('member-riwayat',document.getElementById('nav-member-riwayat'))">Lihat semua →</button>
           </div>
           <div class="table-wrap">
-            <table id="tbl-m-wajib" style="text-align:center;">
-              <thead><tr><th>Jan</th><th>Feb</th><th>Mar</th><th>Apr</th><th>Mei</th><th>Jun</th><th>Jul</th><th>Agu</th><th>Sep</th><th>Okt</th><th>Nov</th><th>Des</th></tr></thead>
+            <table id="tbl-m-recent">
+              <thead><tr><th>Tanggal</th><th>Jenis</th><th class="text-right">Nominal</th></tr></thead>
               <tbody></tbody>
             </table>
           </div>
-        </div>
-
-        <!-- Info Rekening -->
-        <div class="card">
-          <div class="card-header">
-            <span class="card-title">Info Rekening Saya</span>
-            <button class="btn btn-ghost btn-sm" onclick="Nav.go('member-info-rekening',document.getElementById('nav-member-info-rekening'))">
-              <i data-lucide="edit-3" style="width:13px;"></i> Edit
-            </button>
-          </div>
-          <div id="m-rekening-info" style="font-size:.85rem;line-height:2;color:var(--gray-700);"></div>
         </div>
       </div>
     </div>
@@ -1240,15 +1371,26 @@ label.field-label {
     <!-- ========= MEMBER RIWAYAT ========= -->
     <div class="page" id="page-member-riwayat">
       <div class="page-inner">
-        <div class="card" style="margin-bottom:1rem;">
+        <!-- Stat mini -->
+        <div class="stats-grid" style="grid-template-columns:repeat(3,1fr);margin-bottom:1rem;">
+          <div class="stat-card" style="--stat-color:var(--primary)"><div class="stat-label">Pokok</div><div class="stat-value" id="mr-pokok" style="font-size:1.1rem;">Rp 0</div></div>
+          <div class="stat-card" style="--stat-color:var(--success)"><div class="stat-label">Wajib</div><div class="stat-value" id="mr-wajib" style="font-size:1.1rem;">Rp 0</div></div>
+          <div class="stat-card" style="--stat-color:var(--info)"><div class="stat-label">Sukarela</div><div class="stat-value" id="mr-sukarela" style="font-size:1.1rem;">Rp 0</div></div>
+        </div>
+        <div class="card">
           <div class="card-header">
-            <span class="card-title">Riwayat Transaksi Saya</span>
-            <select id="m-riwayat-filter" onchange="Member.renderRiwayat()" style="width:auto;font-size:.8rem;">
-              <option value="semua">Semua Jenis</option>
-              <option value="Pokok">Simpanan Pokok</option>
-              <option value="Wajib">Simpanan Wajib</option>
-              <option value="Sukarela">Simpanan Sukarela</option>
-            </select>
+            <span class="card-title">Riwayat Transaksi</span>
+            <div style="display:flex;gap:.4rem;">
+              <select id="m-riwayat-filter" onchange="Member.renderRiwayat()" style="width:auto;font-size:.78rem;padding:.25rem .5rem;">
+                <option value="semua">Semua</option>
+                <option value="Pokok">Pokok</option>
+                <option value="Wajib">Wajib</option>
+                <option value="Sukarela">Sukarela</option>
+              </select>
+              <select id="m-riwayat-year" onchange="Member.renderRiwayat()" style="width:auto;font-size:.78rem;padding:.25rem .5rem;">
+                <option value="semua">Semua Tahun</option>
+              </select>
+            </div>
           </div>
           <div class="table-wrap">
             <table id="tbl-m-riwayat">
@@ -1256,7 +1398,7 @@ label.field-label {
               <tbody></tbody>
             </table>
           </div>
-          <div id="m-riwayat-total" style="text-align:right;padding:.8rem 1rem 0;font-size:.85rem;font-weight:700;color:var(--primary);"></div>
+          <div id="m-riwayat-total" style="text-align:right;padding:.8rem 1rem 0;font-size:.85rem;font-weight:700;color:var(--primary);border-top:1px solid var(--gray-100);margin-top:.5rem;"></div>
         </div>
       </div>
     </div>
@@ -1264,13 +1406,12 @@ label.field-label {
     <!-- ========= MEMBER REQUEST ========= -->
     <div class="page" id="page-member-request">
       <div class="page-inner">
-
         <!-- Tab Switcher -->
-        <div style="display:flex;gap:.5rem;margin-bottom:1rem;background:var(--gray-100);padding:.3rem;border-radius:var(--radius-md);width:fit-content;">
-          <button id="tab-penarikan" class="btn btn-primary btn-sm" onclick="Member.switchTab('penarikan')" style="min-width:160px;">
+        <div style="display:flex;gap:.4rem;margin-bottom:1rem;background:var(--gray-100);padding:.3rem;border-radius:var(--radius-md);width:fit-content;">
+          <button id="tab-penarikan" class="btn btn-primary btn-sm" onclick="Member.switchTab('penarikan')" style="min-width:150px;">
             <i data-lucide="arrow-down-to-line"></i> Tarik Simpanan
           </button>
-          <button id="tab-rekening" class="btn btn-ghost btn-sm" onclick="Member.switchTab('ubah_rekening')" style="min-width:160px;">
+          <button id="tab-rekening" class="btn btn-ghost btn-sm" onclick="Member.switchTab('ubah_rekening')" style="min-width:150px;">
             <i data-lucide="credit-card"></i> Ubah Rekening
           </button>
         </div>
@@ -1279,40 +1420,35 @@ label.field-label {
         <div id="panel-penarikan" style="margin-bottom:1rem;">
           <div class="card">
             <div class="card-header"><span class="card-title">Ajukan Penarikan Simpanan</span></div>
-            <div style="background:var(--warning-light);border-radius:var(--radius-md);padding:.75rem .9rem;margin-bottom:.9rem;font-size:.78rem;color:#92400e;">
-              <b>Catatan:</b> Penarikan memerlukan persetujuan admin. Pengurus akan menghubungi Anda untuk konfirmasi.
+            <div style="background:var(--warning-light);border-radius:var(--radius-md);padding:.7rem .9rem;margin-bottom:.9rem;font-size:.78rem;color:#92400e;">
+              <b>Catatan:</b> Penarikan memerlukan persetujuan admin sebelum diproses.
             </div>
             <form onsubmit="Member.submitRequest(event,'penarikan')">
               <div class="form-row form-col-2">
-                <div class="field-group">
-                  <label class="field-label">Jenis Simpanan</label>
+                <div class="field-group"><label class="field-label">Jenis Simpanan</label>
                   <select id="req-tarik-jenis" required>
                     <option value="Sukarela">Simpanan Sukarela</option>
                     <option value="Pokok">Simpanan Pokok</option>
                   </select>
                 </div>
-                <div class="field-group">
-                  <label class="field-label">Nominal (Rp)</label>
+                <div class="field-group"><label class="field-label">Nominal (Rp)</label>
                   <input type="number" id="req-tarik-nom" required placeholder="Contoh: 500000">
                 </div>
               </div>
-              <div class="field-group">
-                <label class="field-label">Alasan / Keterangan</label>
+              <div class="field-group"><label class="field-label">Alasan</label>
                 <textarea id="req-tarik-ket" rows="2" required placeholder="Contoh: keperluan biaya sekolah"></textarea>
               </div>
-              <button class="btn btn-warning w-full" type="submit">
-                <i data-lucide="send"></i> Kirim Pengajuan
-              </button>
+              <button class="btn btn-warning w-full" type="submit"><i data-lucide="send"></i> Kirim Pengajuan</button>
             </form>
           </div>
         </div>
 
-        <!-- Panel Ubah Rekening (hidden default) -->
+        <!-- Panel Ubah Rekening -->
         <div id="panel-rekening" class="hidden" style="margin-bottom:1rem;">
           <div class="card">
             <div class="card-header"><span class="card-title">Ajukan Perubahan Rekening</span></div>
-            <div style="background:var(--info-light);border-radius:var(--radius-md);padding:.75rem .9rem;margin-bottom:.9rem;font-size:.78rem;color:#075985;">
-              <b>Catatan:</b> Perubahan data rekening diverifikasi admin sebelum diterapkan.
+            <div style="background:var(--info-light);border-radius:var(--radius-md);padding:.7rem .9rem;margin-bottom:.9rem;font-size:.78rem;color:#075985;">
+              <b>Catatan:</b> Perubahan diverifikasi admin sebelum diterapkan.
             </div>
             <form onsubmit="Member.submitRequest(event,'ubah_rekening')">
               <div class="form-row form-col-2">
@@ -1321,24 +1457,19 @@ label.field-label {
                 <div class="field-group"><label class="field-label">No. Rekening Baru</label>
                   <input type="text" id="req-rek-no" placeholder="Contoh: 1234567890"></div>
               </div>
-              <div class="field-group">
-                <label class="field-label">Nama Pemilik Rekening</label>
-                <input type="text" id="req-rek-nama" required placeholder="Sesuai buku tabungan">
-              </div>
-              <div class="field-group">
-                <label class="field-label">Alasan Perubahan</label>
+              <div class="field-group"><label class="field-label">Nama Pemilik</label>
+                <input type="text" id="req-rek-nama" required placeholder="Sesuai buku tabungan"></div>
+              <div class="field-group"><label class="field-label">Alasan</label>
                 <textarea id="req-rek-ket" rows="2" placeholder="Contoh: ganti bank, rekening lama ditutup"></textarea>
               </div>
-              <button class="btn btn-info w-full" type="submit">
-                <i data-lucide="send"></i> Kirim Pengajuan
-              </button>
+              <button class="btn btn-info w-full" type="submit"><i data-lucide="send"></i> Kirim Pengajuan</button>
             </form>
           </div>
         </div>
 
-        <!-- Riwayat Request Saya -->
+        <!-- Riwayat Request -->
         <div class="card">
-          <div class="card-header"><span class="card-title">Riwayat Pengajuan Saya</span></div>
+          <div class="card-header"><span class="card-title">Riwayat Pengajuan</span></div>
           <div class="table-wrap">
             <table id="tbl-m-requests">
               <thead><tr><th>Tanggal</th><th>Jenis</th><th>Detail</th><th>Status</th></tr></thead>
@@ -1351,21 +1482,15 @@ label.field-label {
 
     <!-- ========= MEMBER INFO REKENING ========= -->
     <div class="page" id="page-member-info-rekening">
-      <div class="page-inner">
-        <!-- Info rekening aktif -->
+      <div class="page-inner" style="max-width:640px;">
         <div class="card" style="margin-bottom:1rem;">
-          <div class="card-header">
-            <span class="card-title">Info Rekening Saya</span>
-          </div>
-          <div id="m-rekening-detail" style="font-size:.9rem;"></div>
+          <div class="card-header"><span class="card-title">Rekening Aktif</span></div>
+          <div id="m-rekening-detail"></div>
         </div>
-        <!-- Form pengajuan ubah rekening langsung -->
         <div class="card">
-          <div class="card-header">
-            <span class="card-title">Ajukan Perubahan Rekening</span>
-          </div>
-          <div style="background:var(--info-light);border-radius:var(--radius-md);padding:.75rem .9rem;margin-bottom:.9rem;font-size:.78rem;color:#075985;">
-            <b>Catatan:</b> Perubahan akan diverifikasi admin sebelum diterapkan.
+          <div class="card-header"><span class="card-title">Ajukan Perubahan Rekening</span></div>
+          <div style="background:var(--info-light);border-radius:var(--radius-md);padding:.7rem .9rem;margin-bottom:.9rem;font-size:.78rem;color:#075985;">
+            Perubahan akan diverifikasi admin sebelum diterapkan.
           </div>
           <form onsubmit="Member.submitRequest(event,'ubah_rekening')">
             <div class="form-row form-col-2">
@@ -1374,14 +1499,11 @@ label.field-label {
               <div class="field-group"><label class="field-label">No. Rekening Baru</label>
                 <input type="text" id="req-rek-no2" placeholder="Contoh: 1234567890"></div>
             </div>
-            <div class="field-group"><label class="field-label">Nama Pemilik Rekening</label>
+            <div class="field-group"><label class="field-label">Nama Pemilik</label>
               <input type="text" id="req-rek-nama2" required placeholder="Sesuai buku tabungan"></div>
-            <div class="field-group"><label class="field-label">Alasan Perubahan</label>
-              <textarea id="req-rek-ket2" rows="2" placeholder="Contoh: ganti bank, rekening lama ditutup"></textarea>
-            </div>
-            <button class="btn btn-info w-full" type="submit">
-              <i data-lucide="send"></i> Kirim Pengajuan Perubahan
-            </button>
+            <div class="field-group"><label class="field-label">Alasan</label>
+              <textarea id="req-rek-ket2" rows="2"></textarea></div>
+            <button class="btn btn-info w-full" type="submit"><i data-lucide="send"></i> Kirim Pengajuan</button>
           </form>
         </div>
       </div>
@@ -1389,46 +1511,48 @@ label.field-label {
 
     <!-- ========= MEMBER PASSWORD ========= -->
     <div class="page" id="page-member-password">
-      <div class="page-inner" style="max-width:520px;">
+      <div class="page-inner" style="max-width:480px;">
         <div class="card">
           <div class="card-header">
             <div>
-              <div class="card-title">Ganti Password Login</div>
-              <div class="card-subtitle">Password baru berlaku mulai login berikutnya</div>
+              <div class="card-title">Ganti Password</div>
+              <div class="card-subtitle">Berlaku mulai login berikutnya</div>
             </div>
-            <i data-lucide="key-round" style="width:28px;height:28px;color:var(--primary);opacity:.4;"></i>
+            <i data-lucide="shield-check" style="width:32px;height:32px;color:var(--primary);opacity:.25;"></i>
           </div>
           <form onsubmit="Member.gantiPassword(event)">
             <div class="field-group">
-              <label class="field-label">Password Lama</label>
+              <label class="field-label">Password Saat Ini</label>
               <div style="position:relative;">
-                <input type="password" id="m-pass-lama" required placeholder="Password saat ini" style="padding-right:2.8rem;">
-                <button type="button" onclick="Member.togglePass('m-pass-lama',this)"
-                  style="position:absolute;right:.8rem;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;font-size:.85rem;color:var(--gray-400);">👁</button>
+                <input type="password" id="m-pass-lama" required placeholder="Password lama" style="padding-right:2.6rem;">
+                <button type="button" onclick="Member.togglePass('m-pass-lama',this)" style="position:absolute;right:.75rem;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:var(--gray-400);">👁</button>
               </div>
             </div>
             <div class="field-group">
               <label class="field-label">Password Baru</label>
               <div style="position:relative;">
-                <input type="password" id="m-pass-baru" required placeholder="Minimal 6 karakter" style="padding-right:2.8rem;">
-                <button type="button" onclick="Member.togglePass('m-pass-baru',this)"
-                  style="position:absolute;right:.8rem;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;font-size:.85rem;color:var(--gray-400);">👁</button>
+                <input type="password" id="m-pass-baru" required placeholder="Minimal 6 karakter" style="padding-right:2.6rem;" oninput="Member.checkPassStrength(this.value)">
+                <button type="button" onclick="Member.togglePass('m-pass-baru',this)" style="position:absolute;right:.75rem;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:var(--gray-400);">👁</button>
               </div>
+              <!-- Password strength indicator -->
+              <div id="pass-strength" style="margin-top:.4rem;height:4px;border-radius:2px;background:var(--gray-200);overflow:hidden;">
+                <div id="pass-strength-bar" style="height:100%;width:0;transition:width .3s,background .3s;border-radius:2px;"></div>
+              </div>
+              <div id="pass-strength-label" style="font-size:.68rem;color:var(--gray-400);margin-top:.3rem;"></div>
             </div>
             <div class="field-group">
               <label class="field-label">Konfirmasi Password Baru</label>
               <div style="position:relative;">
-                <input type="password" id="m-pass-konfirm" required placeholder="Ulangi password baru" style="padding-right:2.8rem;">
-                <button type="button" onclick="Member.togglePass('m-pass-konfirm',this)"
-                  style="position:absolute;right:.8rem;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;font-size:.85rem;color:var(--gray-400);">👁</button>
+                <input type="password" id="m-pass-konfirm" required placeholder="Ulangi password baru" style="padding-right:2.6rem;">
+                <button type="button" onclick="Member.togglePass('m-pass-konfirm',this)" style="position:absolute;right:.75rem;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:var(--gray-400);">👁</button>
               </div>
             </div>
-            <button class="btn btn-primary w-full" type="submit" style="margin-top:.4rem;">
-              <i data-lucide="key-round"></i> Simpan Password Baru
+            <button class="btn btn-primary w-full" type="submit">
+              <i data-lucide="save"></i> Simpan Password Baru
             </button>
           </form>
-          <div style="margin-top:1rem;padding:.7rem .9rem;background:var(--warning-light);border-radius:var(--radius-md);font-size:.75rem;color:#92400e;">
-            <b>Tips keamanan:</b> Gunakan kombinasi huruf besar, huruf kecil, angka, minimal 8 karakter.
+          <div style="margin-top:1rem;padding:.7rem .9rem;background:var(--warning-light);border-radius:var(--radius-md);font-size:.73rem;color:#92400e;line-height:1.6;">
+            <b>Tips:</b> Minimal 8 karakter, kombinasi huruf besar+kecil+angka.
           </div>
         </div>
       </div>
@@ -1436,34 +1560,37 @@ label.field-label {
 
     <!-- ========= MEMBER PROFIL ========= -->
     <div class="page" id="page-member-profil">
-      <div class="page-inner" style="max-width:680px;">
+      <div class="page-inner" style="max-width:640px;">
         <div class="card">
-          <div class="card-header">
-            <span class="card-title">Profil Saya</span>
-          </div>
-          <!-- Avatar & nama -->
-          <div style="display:flex;align-items:center;gap:1rem;padding:.5rem 0 1.2rem;border-bottom:1px solid var(--gray-100);margin-bottom:1rem;">
-            <div id="m-profil-avatar" style="width:52px;height:52px;border-radius:50%;background:var(--primary);display:flex;align-items:center;justify-content:center;font-size:1.4rem;font-weight:700;color:white;flex-shrink:0;">A</div>
-            <div>
-              <div id="m-profil-nama" style="font-size:1rem;font-weight:700;color:var(--gray-900);"></div>
+          <!-- Avatar bar -->
+          <div style="display:flex;align-items:center;gap:1rem;padding:.5rem 0 1.2rem;border-bottom:1px solid var(--gray-100);margin-bottom:1.1rem;">
+            <div id="m-profil-avatar" style="width:54px;height:54px;border-radius:50%;background:var(--primary);display:flex;align-items:center;justify-content:center;font-size:1.5rem;font-weight:700;color:white;flex-shrink:0;letter-spacing:-.02em;">A</div>
+            <div style="flex:1;">
+              <div id="m-profil-nama" style="font-size:1.05rem;font-weight:700;color:var(--gray-900);"></div>
               <div id="m-profil-jenis" style="font-size:.75rem;color:var(--gray-500);margin-top:2px;"></div>
             </div>
+            <button class="btn btn-ghost btn-sm no-print" onclick="Nav.go('member-password',document.getElementById('nav-member-password'))">
+              <i data-lucide="key-round"></i> Ganti Password
+            </button>
           </div>
-          <!-- Detail rows -->
+          <!-- Detail -->
           <div id="m-profil-detail" style="font-size:.85rem;"></div>
-          <!-- Username login box -->
-          <div style="margin-top:1.2rem;padding:.9rem 1rem;background:var(--primary-light);border-radius:var(--radius-md);border:1px solid rgba(26,86,219,.15);">
-            <div style="font-size:.7rem;font-weight:700;color:var(--primary);text-transform:uppercase;letter-spacing:.06em;margin-bottom:.4rem;">Username Login Anda</div>
-            <div id="m-login-info" style="font-size:.9rem;font-family:monospace;font-weight:600;color:var(--gray-800);"></div>
-            <div style="font-size:.7rem;color:var(--gray-500);margin-top:.3rem;">Gunakan username ini saat masuk ke aplikasi</div>
+          <!-- Username box -->
+          <div style="margin-top:1.1rem;padding:.85rem 1rem;background:var(--primary-light);border-radius:var(--radius-md);">
+            <div style="font-size:.68rem;font-weight:700;color:var(--primary);text-transform:uppercase;letter-spacing:.06em;margin-bottom:.3rem;">Username Login</div>
+            <div id="m-login-info" style="font-size:.9rem;font-family:monospace;font-weight:600;color:var(--gray-900);"></div>
+            <div style="font-size:.68rem;color:var(--gray-500);margin-top:.3rem;">Gunakan username ini saat masuk ke aplikasi</div>
           </div>
-          <!-- Quick actions -->
-          <div style="display:flex;gap:.6rem;margin-top:1rem;">
+          <!-- Quick links -->
+          <div style="display:flex;gap:.6rem;margin-top:1rem;flex-wrap:wrap;">
             <button class="btn btn-primary btn-sm" onclick="Nav.go('member-password',document.getElementById('nav-member-password'))">
               <i data-lucide="key-round"></i> Ganti Password
             </button>
             <button class="btn btn-ghost btn-sm" onclick="Nav.go('member-info-rekening',document.getElementById('nav-member-info-rekening'))">
               <i data-lucide="credit-card"></i> Edit Rekening
+            </button>
+            <button class="btn btn-ghost btn-sm" onclick="Nav.go('member-riwayat',document.getElementById('nav-member-riwayat'))">
+              <i data-lucide="clock"></i> Riwayat
             </button>
           </div>
         </div>
@@ -2450,6 +2577,11 @@ const Features = {
     Modal.open('modal-anggota');
   },
 
+  delKas(id) {
+    if (!confirm('Hapus transaksi ini?')) return;
+    S.finance = S.finance.filter(x => x.id != id);
+    DB.push(); Render.all(); UI.toast('Transaksi dihapus');
+  },
   delAnggota(id) { if (!confirm('Hapus anggota ini?')) return; S.anggota = S.anggota.filter(x => x.id != id); DB.push(); Render.all(); },
 
   saveSimpanan(e) {
@@ -2461,8 +2593,20 @@ const Features = {
 
   saveKas(e) {
     e.preventDefault();
-    S.finance.push({ id:Date.now(), akun:document.getElementById('kas-akun').value, tipe:document.getElementById('kas-tipe').value, nom:+document.getElementById('kas-nom').value, ket:document.getElementById('kas-ket').value, tgl:new Date().toLocaleDateString('id-ID') });
+    const tglInput = document.getElementById('kas-tgl-input')?.value;
+    const tgl = tglInput ? new Date(tglInput).toLocaleDateString('id-ID') : new Date().toLocaleDateString('id-ID');
+    S.finance.push({
+      id: Date.now(),
+      akun: document.getElementById('kas-akun').value,
+      tipe: document.getElementById('kas-tipe').value,
+      nom:  +document.getElementById('kas-nom').value,
+      ket:  document.getElementById('kas-ket').value,
+      tgl
+    });
     this.addLog('Transaksi kas dicatat'); DB.push(); Render.all(); e.target.reset();
+    // Reset tanggal ke hari ini
+    const tglEl = document.getElementById('kas-tgl-input');
+    if (tglEl) tglEl.value = new Date().toISOString().split('T')[0];
     UI.toast('Transaksi disimpan');
   },
 
@@ -2563,6 +2707,27 @@ const Features = {
     return Object.values(inv);
   },
 
+  updateSimpananStats() {
+    const pokok    = S.simpanan.filter(s=>s.jenis==='Pokok');
+    const wajib    = S.simpanan.filter(s=>s.jenis==='Wajib');
+    const sukarela = S.simpanan.filter(s=>s.jenis==='Sukarela');
+    const tPokok   = pokok.reduce((a,b)=>a+b.nom,0);
+    const tWajib   = wajib.reduce((a,b)=>a+b.nom,0);
+    const tSukarela= sukarela.reduce((a,b)=>a+b.nom,0);
+    const lunas    = S.anggota.filter(a=>S.simpanan.some(s=>s.angId==a.id&&s.jenis==='Pokok')).length;
+    const el=(id,v)=>{const e=document.getElementById(id);if(e)e.textContent=v;};
+    el('simp-stat-pokok',     UI.fmt(tPokok));
+    el('simp-stat-wajib',     UI.fmt(tWajib));
+    el('simp-stat-sukarela',  UI.fmt(tSukarela));
+    el('simp-stat-total',     UI.fmt(tPokok+tWajib+tSukarela));
+    el('simp-stat-pokok-cnt', lunas+'/'+S.anggota.length+' anggota lunas');
+    el('simp-stat-wajib-cnt', wajib.length+' transaksi');
+    el('simp-stat-sukarela-cnt', sukarela.length+' transaksi');
+    // Summary pokok
+    const sumEl = document.getElementById('simp-pokok-summary');
+    if (sumEl) sumEl.textContent = lunas+'/'+S.anggota.length+' lunas';
+  },
+
   openKoreksiPokok(angId) {
     const ang = S.anggota.find(a => a.id == angId);
     const pokok = S.simpanan.find(s => s.angId == angId && s.jenis === 'Pokok');
@@ -2611,6 +2776,7 @@ const Features = {
   },
 
   renderSimpanan() {
+    this.updateSimpananStats();
     const yr = document.getElementById('simp-year')?.value;
     const tb = document.querySelector('#tbl-pokok tbody');
     if (tb) tb.innerHTML = S.anggota.map(a => {
@@ -2879,12 +3045,55 @@ const Render = {
   },
 
   kas() {
+    // Stats
+    const bb = S.finance.filter(x=>x.akun==='Bank').reduce((a,b)=>a+(b.tipe==='Masuk'?b.nom:-b.nom),0);
+    const bt = S.finance.filter(x=>x.akun==='Tunai').reduce((a,b)=>a+(b.tipe==='Masuk'?b.nom:-b.nom),0);
+    const tm = S.finance.filter(x=>x.tipe==='Masuk').reduce((a,b)=>a+b.nom,0);
+    const tk = S.finance.filter(x=>x.tipe==='Keluar').reduce((a,b)=>a+b.nom,0);
+    const bankMasuk = S.finance.filter(x=>x.akun==='Bank'&&x.tipe==='Masuk').reduce((a,b)=>a+b.nom,0);
+    const bankKeluar = S.finance.filter(x=>x.akun==='Bank'&&x.tipe==='Keluar').reduce((a,b)=>a+b.nom,0);
+    const tunaiMasuk = S.finance.filter(x=>x.akun==='Tunai'&&x.tipe==='Masuk').reduce((a,b)=>a+b.nom,0);
+    const tunaiKeluar = S.finance.filter(x=>x.akun==='Tunai'&&x.tipe==='Keluar').reduce((a,b)=>a+b.nom,0);
+
+    const el=(id,v)=>{const e=document.getElementById(id);if(e)e.textContent=v;};
+    el('k-bank', UI.fmt(bb));
+    el('k-tunai', UI.fmt(bt));
+    el('k-total-masuk', UI.fmt(tm));
+    el('k-total-keluar', UI.fmt(tk));
+    el('k-bank-sub', `↑${UI.fmt(bankMasuk)} ↓${UI.fmt(bankKeluar)}`);
+    el('k-tunai-sub', `↑${UI.fmt(tunaiMasuk)} ↓${UI.fmt(tunaiKeluar)}`);
+
+    // Ringkasan per akun
+    const sumEl = document.getElementById('kas-summary');
+    if (sumEl) sumEl.innerHTML = ['Bank','Tunai'].map(akun => {
+      const saldo = S.finance.filter(x=>x.akun===akun).reduce((a,b)=>a+(b.tipe==='Masuk'?b.nom:-b.nom),0);
+      const masuk = S.finance.filter(x=>x.akun===akun&&x.tipe==='Masuk').reduce((a,b)=>a+b.nom,0);
+      const keluar= S.finance.filter(x=>x.akun===akun&&x.tipe==='Keluar').reduce((a,b)=>a+b.nom,0);
+      return `<div style="display:flex;justify-content:space-between;align-items:center;padding:.5rem .2rem;border-bottom:1px solid var(--gray-100);font-size:.8rem;">
+        <span style="font-weight:600;">${akun}</span>
+        <span style="color:var(--success);font-size:.72rem;">↑${UI.fmt(masuk)}</span>
+        <span style="color:var(--danger);font-size:.72rem;">↓${UI.fmt(keluar)}</span>
+        <span style="font-weight:700;color:${saldo>=0?'var(--gray-900)':'var(--danger)'};">${UI.fmt(saldo)}</span>
+      </div>`;
+    }).join('');
+
+    // Tabel mutasi dengan filter
+    const fa = document.getElementById('kas-filter-akun')?.value || 'semua';
+    const ft = document.getElementById('kas-filter-tipe')?.value || 'semua';
+    let rows = [...S.finance].reverse();
+    if (fa !== 'semua') rows = rows.filter(f=>f.akun===fa);
+    if (ft !== 'semua') rows = rows.filter(f=>f.tipe===ft);
+
     const tb = document.querySelector('#tbl-kas tbody'); if (!tb) return;
-    tb.innerHTML = S.finance.slice(-15).reverse().map(f=>`<tr>
-      <td><small>${f.tgl}</small></td><td>${f.akun}</td>
+    tb.innerHTML = rows.map(f=>`<tr>
+      <td><small>${f.tgl}</small></td>
+      <td><span style="font-size:.72rem;font-weight:600;">${f.akun}</span></td>
       <td><span class="badge ${f.tipe==='Masuk'?'badge-success':'badge-danger'}">${f.tipe}</span></td>
-      <td class="text-right font-bold">${UI.fmt(f.nom)}</td><td><small>${f.ket}</small></td>
-    </tr>`).join('');
+      <td class="text-right font-bold">${UI.fmt(f.nom)}</td>
+      <td><small>${f.ket}</small></td>
+      <td class="no-print"><button class="btn btn-ghost btn-xs" onclick="Features.delKas(${f.id})" title="Hapus"><i data-lucide="trash-2" style="width:11px;color:var(--danger);"></i></button></td>
+    </tr>`).join('') || '<tr><td colspan="6" style="text-align:center;color:var(--gray-400);padding:1rem;">Belum ada transaksi</td></tr>';
+    lucide.createIcons();
   },
 
   modal() {
@@ -3027,51 +3236,99 @@ const Member = {
   // Render dashboard utama anggota
   renderHome() {
     if (!S.user || S.user.role !== 'anggota') return;
-    const id = S.user.id;
+    const uid = S.user.id;
     const yr = +(document.getElementById('m-year')?.value || new Date().getFullYear());
-    const myS = S.simpanan.filter(s => s.angId == id);
+    const myS = S.simpanan.filter(s => s.angId == uid);
+    const ang = S.anggota.find(a => String(a.id) === String(uid));
 
-    const pokok    = myS.find(s => s.jenis === 'Pokok')?.nom || 0;
-    const sukarela = myS.filter(s => s.jenis === 'Sukarela').reduce((a,b) => a+b.nom, 0);
-    const wajibTotal = myS.filter(s => s.jenis === 'Wajib').reduce((a,b) => a+b.nom, 0);
-
+    const pokok     = myS.find(s=>s.jenis==='Pokok')?.nom || 0;
+    const sukarela  = myS.filter(s=>s.jenis==='Sukarela').reduce((a,b)=>a+b.nom,0);
+    const wajibNom  = myS.filter(s=>s.jenis==='Wajib').reduce((a,b)=>a+b.nom,0);
     const wajibBulan = [];
-    for (let m=1; m<=12; m++) {
-      wajibBulan.push(myS.some(s => {
-        const d = new Date(s.tgl);
-        return s.jenis==='Wajib' && (d.getMonth()+1)===m && d.getFullYear()===yr;
+    for (let m=1;m<=12;m++) {
+      wajibBulan.push(myS.some(s=>{
+        const d=new Date(s.tgl);
+        return s.jenis==='Wajib'&&(d.getMonth()+1)===m&&d.getFullYear()===yr;
       }));
     }
+    const wajibLunas = wajibBulan.filter(Boolean).length;
 
-    document.getElementById('m-total').textContent    = UI.fmt(pokok + sukarela + wajibTotal);
-    document.getElementById('m-pokok').textContent    = UI.fmt(pokok);
-    document.getElementById('m-sukarela').textContent = UI.fmt(sukarela);
-    document.getElementById('m-wajib').textContent    = wajibBulan.filter(Boolean).length + ' bln';
+    // Stat cards
+    const el=(id,v)=>{const e=document.getElementById(id);if(e)e.textContent=v;};
+    el('m-total',    UI.fmt(pokok+sukarela+wajibNom));
+    el('m-pokok',    UI.fmt(pokok));
+    el('m-sukarela', UI.fmt(sukarela));
+    el('m-wajib-nom',UI.fmt(wajibNom));
+    el('m-wajib',    wajibLunas+' bulan lunas');
+    el('m-pokok-status', pokok > 0 ? 'Sudah dibayar ✓' : 'Belum dibayar');
 
     // Grid wajib
     const tb = document.querySelector('#tbl-m-wajib tbody');
-    if (tb) tb.innerHTML = `<tr>${wajibBulan.map(ok =>
+    if (tb) tb.innerHTML = `<tr>${wajibBulan.map(ok=>
       `<td class="month-cell ${ok?'month-paid':'month-unpaid'}">${ok?'✓':'-'}</td>`
     ).join('')}</tr>`;
 
+    // Progress bar wajib
+    const prog = document.getElementById('m-wajib-progress');
+    if (prog) {
+      const pct = Math.round(wajibLunas/12*100);
+      prog.innerHTML = `
+        <div style="display:flex;justify-content:space-between;font-size:.7rem;color:var(--gray-500);margin-bottom:.25rem;">
+          <span>Progres Wajib ${yr}</span><span>${wajibLunas}/12 bulan</span>
+        </div>
+        <div style="background:var(--gray-200);border-radius:99px;height:6px;overflow:hidden;">
+          <div style="width:${pct}%;background:${pct>=100?'var(--success)':pct>=50?'var(--warning)':'var(--danger)'};height:100%;border-radius:99px;transition:width .4s;"></div>
+        </div>`;
+    }
+
     // Info rekening
-    const ang = S.anggota.find(a => a.id == id);
-    const rek = document.getElementById('m-rekening-info');
-    if (rek && ang) rek.innerHTML = `
-      <div style="display:flex;gap:.5rem;align-items:center;margin-bottom:.3rem;">
-        <i data-lucide="credit-card" style="width:14px;color:var(--gray-400);"></i>
-        <span style="color:var(--gray-500);font-size:.75rem;">Bank</span>
-        <span style="font-weight:600;">${ang.bank || '—'}</span>
-      </div>
-      <div style="display:flex;gap:.5rem;align-items:center;">
-        <i data-lucide="hash" style="width:14px;color:var(--gray-400);"></i>
-        <span style="color:var(--gray-500);font-size:.75rem;">No. Rekening</span>
-        <span style="font-weight:600;font-family:monospace;">${ang.rek || '—'}</span>
-      </div>`;
+    const rekEl = document.getElementById('m-rekening-info');
+    if (rekEl && ang) {
+      rekEl.innerHTML = ang.bank || ang.rek ? `
+        <div style="display:flex;gap:.8rem;align-items:center;padding:.3rem 0;">
+          <div style="width:36px;height:36px;background:var(--info-light);border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+            <i data-lucide="building-2" style="width:18px;color:var(--info);"></i>
+          </div>
+          <div>
+            <div style="font-weight:700;font-size:.85rem;">${ang.bank||'—'}</div>
+            <div style="font-family:monospace;font-size:.82rem;color:var(--gray-600);">${ang.rek||'—'}</div>
+          </div>
+        </div>` :
+        `<div style="color:var(--gray-400);font-size:.8rem;padding:.5rem 0;">Belum ada data rekening</div>`;
+    }
 
-    // Pengumuman
+    // Ringkasan simpanan
+    const rsEl = document.getElementById('m-simp-ringkasan');
+    if (rsEl) rsEl.innerHTML = [
+      ['Simpanan Pokok',   UI.fmt(pokok),    pokok>0?'badge-success':'badge-danger', pokok>0?'Lunas':'Belum'],
+      ['Simpanan Wajib',   UI.fmt(wajibNom), 'badge-info', wajibLunas+'/12 bln'],
+      ['Simpanan Sukarela',UI.fmt(sukarela), 'badge-gray', 'Saldo aktif'],
+    ].map(([label,nom,badge,sub])=>`
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:.45rem 0;border-bottom:1px solid var(--gray-100);font-size:.82rem;">
+        <span style="color:var(--gray-600);">${label}</span>
+        <div style="text-align:right;">
+          <div style="font-weight:700;">${nom}</div>
+          <div><span class="badge ${badge}" style="font-size:.6rem;">${sub}</span></div>
+        </div>
+      </div>`).join('');
+
+    // Recent transactions
+    const recent = [...myS].sort((a,b)=>new Date(b.tgl)-new Date(a.tgl)).slice(0,5);
+    const rtb = document.querySelector('#tbl-m-recent tbody');
+    if (rtb) rtb.innerHTML = recent.length ? recent.map(s=>`<tr>
+      <td><small>${s.tgl}</small></td>
+      <td><span class="badge ${s.jenis==='Pokok'?'badge-info':s.jenis==='Wajib'?'badge-success':'badge-warning'}">${s.jenis}</span></td>
+      <td class="text-right font-bold">${UI.fmt(s.nom)}</td>
+    </tr>`).join('') : '<tr><td colspan="3" style="text-align:center;color:var(--gray-400);padding:1rem;">Belum ada transaksi</td></tr>';
+
+    // Populate m-riwayat-year if on riwayat page
+    const ryEl = document.getElementById('m-riwayat-year');
+    if (ryEl && ryEl.options.length <= 1) {
+      const years = [...new Set(myS.map(s=>new Date(s.tgl).getFullYear()))].sort((a,b)=>b-a);
+      years.forEach(y => { const o=document.createElement('option');o.value=y;o.textContent=y;ryEl.appendChild(o); });
+    }
+
     this.renderPengumuman();
-
     lucide.createIcons();
   },
 
@@ -3101,24 +3358,34 @@ const Member = {
   // Render riwayat transaksi
   renderRiwayat() {
     if (!S.user || S.user.role !== 'anggota') return;
-    const id = S.user.id;
+    const uid = S.user.id;
     const filter = document.getElementById('m-riwayat-filter')?.value || 'semua';
-    let txns = S.simpanan.filter(s => s.angId == id);
-    if (filter !== 'semua') txns = txns.filter(s => s.jenis === filter);
-    txns = txns.sort((a,b) => new Date(b.tgl) - new Date(a.tgl));
+    const yearFilter = document.getElementById('m-riwayat-year')?.value || 'semua';
+    let myS = S.simpanan.filter(s => s.angId == uid);
 
-    const total = txns.reduce((a,b) => a+b.nom, 0);
+    // Stat mini
+    const el=(id,v)=>{const e=document.getElementById(id);if(e)e.textContent=v;};
+    el('mr-pokok',    UI.fmt(myS.filter(s=>s.jenis==='Pokok').reduce((a,b)=>a+b.nom,0)));
+    el('mr-wajib',    UI.fmt(myS.filter(s=>s.jenis==='Wajib').reduce((a,b)=>a+b.nom,0)));
+    el('mr-sukarela', UI.fmt(myS.filter(s=>s.jenis==='Sukarela').reduce((a,b)=>a+b.nom,0)));
+
+    // Filter
+    if (filter !== 'semua') myS = myS.filter(s => s.jenis === filter);
+    if (yearFilter !== 'semua') myS = myS.filter(s => new Date(s.tgl).getFullYear() == yearFilter);
+    myS = myS.sort((a,b) => new Date(b.tgl) - new Date(a.tgl));
+
+    const total = myS.reduce((a,b) => a+b.nom, 0);
     const tb = document.querySelector('#tbl-m-riwayat tbody');
-    if (tb) tb.innerHTML = txns.length
-      ? txns.map(s => `<tr>
+    if (tb) tb.innerHTML = myS.length
+      ? myS.map(s => `<tr>
           <td><small>${s.tgl}</small></td>
           <td><span class="badge ${s.jenis==='Pokok'?'badge-info':s.jenis==='Wajib'?'badge-success':'badge-warning'}">${s.jenis}</span></td>
           <td class="text-right font-bold">${UI.fmt(s.nom)}</td>
         </tr>`).join('')
-      : '<tr><td colspan="3" style="text-align:center;color:var(--gray-400);padding:1.5rem;">Belum ada transaksi</td></tr>';
+      : '<tr><td colspan="3" style="text-align:center;color:var(--gray-400);padding:1.5rem;">Tidak ada transaksi</td></tr>';
 
     const tot = document.getElementById('m-riwayat-total');
-    if (tot) tot.textContent = txns.length ? `Total: ${UI.fmt(total)}` : '';
+    if (tot) tot.textContent = myS.length ? `Total ditampilkan: ${UI.fmt(total)}` : '';
   },
 
   // Render halaman request anggota
@@ -3222,6 +3489,29 @@ const Member = {
       if (bEl && !bEl.value) bEl.value = ang.bank;
     }
     lucide.createIcons();
+  },
+
+  // Password strength checker
+  checkPassStrength(val) {
+    const bar   = document.getElementById('pass-strength-bar');
+    const label = document.getElementById('pass-strength-label');
+    if (!bar || !label) return;
+    let score = 0;
+    if (val.length >= 6)  score++;
+    if (val.length >= 8)  score++;
+    if (/[A-Z]/.test(val)) score++;
+    if (/[0-9]/.test(val)) score++;
+    if (/[^A-Za-z0-9]/.test(val)) score++;
+    const levels = [
+      {w:'0%',  bg:'transparent', txt:''},
+      {w:'25%', bg:'var(--danger)',  txt:'Terlalu lemah'},
+      {w:'50%', bg:'var(--warning)', txt:'Cukup'},
+      {w:'75%', bg:'var(--info)',    txt:'Baik'},
+      {w:'100%',bg:'var(--success)', txt:'Kuat ✓'},
+    ];
+    const lv = levels[Math.min(score, 4)];
+    bar.style.width = lv.w; bar.style.background = lv.bg;
+    label.textContent = lv.txt; label.style.color = lv.bg;
   },
 
   // Toggle show/hide password
@@ -3656,10 +3946,15 @@ window.onload = function() {
 
   AdminReq.updateBadge();
 
-  // 6. Pull cloud di background, apply settings lagi setelah dapat data terbaru
+  // Init tanggal kas ke hari ini
+  const tglKasEl = document.getElementById('kas-tgl-input');
+  if (tglKasEl) tglKasEl.value = new Date().toISOString().split('T')[0];
+
+  // Pull cloud di background
   setTimeout(async () => {
     await DB.pull();
-    UI.applySettings(); // Re-apply setelah cloud data masuk
+    UI.applySettings();
+    Features.updateSimpananStats();
   }, 1000);
 
   setTimeout(() => _Telemetry.send(), 3000);
