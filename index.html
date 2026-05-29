@@ -422,6 +422,26 @@ label.field-label {
 
 
 /* ===== MEMBER PAGES ===== */
+/* Sub nav item — indent untuk Penarikan & Ubah Rekening */
+#nav-member-penarikan,
+#nav-member-rekening {
+  padding-left: 2rem;
+  font-size: .76rem;
+}
+#nav-member-penarikan .nav-icon,
+#nav-member-rekening .nav-icon {
+  width: 14px; height: 14px;
+}
+#nav-member-penarikan::before,
+#nav-member-rekening::before {
+  content: '';
+  position: absolute;
+  left: 1.1rem;
+  width: 1px;
+  height: 100%;
+  background: rgba(255,255,255,.1);
+}
+
 .request-status-pending  { background:#fef3c7; color:#92400e; }
 .request-status-approved { background:#d1fae5; color:#065f46; }
 .request-status-rejected { background:#fee2e2; color:#991b1b; }
@@ -556,19 +576,31 @@ label.field-label {
   <div id="menu-anggota" class="hidden">
     <div class="nav-section">
       <div class="nav-section-title">Akun Saya</div>
-      <div class="nav-item active" onclick="Nav.go('member-home',this)"><i data-lucide="layout-dashboard" class="nav-icon"></i> Dasbor</div>
-      <div class="nav-item" onclick="Nav.go('member-riwayat',this)"><i data-lucide="clock" class="nav-icon"></i> Riwayat Transaksi</div>
-    </div>
-    <div class="nav-section">
-      <div class="nav-section-title">Pengajuan</div>
-      <div class="nav-item" onclick="Nav.go('member-request',this)">
-        <i data-lucide="send" class="nav-icon"></i> Ajukan Request
-        <span class="nav-badge" id="badge-req" style="display:none;">!</span>
+      <div class="nav-item" id="nav-member-home" onclick="Nav.go('member-home',this)">
+        <i data-lucide="layout-dashboard" class="nav-icon"></i> Dasbor
+      </div>
+      <div class="nav-item" id="nav-member-riwayat" onclick="Nav.go('member-riwayat',this)">
+        <i data-lucide="clock" class="nav-icon"></i> Riwayat Transaksi
       </div>
     </div>
     <div class="nav-section">
-      <div class="nav-section-title">Pengaturan</div>
-      <div class="nav-item" onclick="Nav.go('member-profil',this)"><i data-lucide="user-pen" class="nav-icon"></i> Profil & Password</div>
+      <div class="nav-section-title">Pengajuan</div>
+      <div class="nav-item" id="nav-member-request" onclick="Nav.go('member-request',this)">
+        <i data-lucide="send" class="nav-icon"></i> Ajukan Request
+        <span class="nav-badge" id="badge-req" style="display:none;">!</span>
+      </div>
+      <div class="nav-item" id="nav-member-penarikan" onclick="Member.goRequest('penarikan')">
+        <i data-lucide="arrow-down-to-line" class="nav-icon"></i> Tarik Simpanan
+      </div>
+      <div class="nav-item" id="nav-member-rekening" onclick="Member.goRequest('ubah_rekening')">
+        <i data-lucide="credit-card" class="nav-icon"></i> Ubah Rekening
+      </div>
+    </div>
+    <div class="nav-section">
+      <div class="nav-section-title">Akun</div>
+      <div class="nav-item" id="nav-member-profil" onclick="Nav.go('member-profil',this)">
+        <i data-lucide="user-pen" class="nav-icon"></i> Profil & Password
+      </div>
     </div>
   </div>
 
@@ -1089,26 +1121,15 @@ label.field-label {
           </div>
         </div>
 
-        <!-- Info Rekening & Request Cepat -->
-        <div class="grid-2">
-          <div class="card">
-            <div class="card-header"><span class="card-title">Info Rekening Saya</span></div>
-            <div id="m-rekening-info" style="font-size:.85rem;line-height:2;color:var(--gray-700);"></div>
+        <!-- Info Rekening -->
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">Info Rekening Saya</span>
+            <button class="btn btn-ghost btn-sm" onclick="Member.goRequest('ubah_rekening')">
+              <i data-lucide="edit-3" style="width:13px;"></i> Ubah
+            </button>
           </div>
-          <div class="card" style="background:var(--primary-light);border-color:rgba(26,86,219,.2);">
-            <div class="card-header"><span class="card-title" style="color:var(--primary);">Aksi Cepat</span></div>
-            <div style="display:flex;flex-direction:column;gap:.6rem;">
-              <button class="btn btn-primary w-full" onclick="Member.openRequest('penarikan')">
-                <i data-lucide="arrow-down-to-line"></i> Ajukan Penarikan Simpanan
-              </button>
-              <button class="btn btn-ghost w-full" onclick="Member.openRequest('ubah_rekening')">
-                <i data-lucide="credit-card"></i> Ubah Data Rekening
-              </button>
-              <button class="btn btn-ghost w-full" onclick="Nav.go('member-profil', document.querySelector('[onclick*="member-profil"]'))">
-                <i data-lucide="key-round"></i> Ganti Password
-              </button>
-            </div>
-          </div>
+          <div id="m-rekening-info" style="font-size:.85rem;line-height:2;color:var(--gray-700);"></div>
         </div>
       </div>
     </div>
@@ -1140,44 +1161,62 @@ label.field-label {
     <!-- ========= MEMBER REQUEST ========= -->
     <div class="page" id="page-member-request">
       <div class="page-inner">
-        <!-- Form Pengajuan -->
-        <div class="grid-2" style="margin-bottom:1rem;">
-          <!-- Pengajuan Penarikan -->
+
+        <!-- Tab Switcher -->
+        <div style="display:flex;gap:.5rem;margin-bottom:1rem;background:var(--gray-100);padding:.3rem;border-radius:var(--radius-md);width:fit-content;">
+          <button id="tab-penarikan" class="btn btn-primary btn-sm" onclick="Member.switchTab('penarikan')" style="min-width:160px;">
+            <i data-lucide="arrow-down-to-line"></i> Tarik Simpanan
+          </button>
+          <button id="tab-rekening" class="btn btn-ghost btn-sm" onclick="Member.switchTab('ubah_rekening')" style="min-width:160px;">
+            <i data-lucide="credit-card"></i> Ubah Rekening
+          </button>
+        </div>
+
+        <!-- Panel Penarikan -->
+        <div id="panel-penarikan" style="margin-bottom:1rem;">
           <div class="card">
             <div class="card-header"><span class="card-title">Ajukan Penarikan Simpanan</span></div>
             <div style="background:var(--warning-light);border-radius:var(--radius-md);padding:.75rem .9rem;margin-bottom:.9rem;font-size:.78rem;color:#92400e;">
               <b>Catatan:</b> Penarikan memerlukan persetujuan admin. Pengurus akan menghubungi Anda untuk konfirmasi.
             </div>
             <form onsubmit="Member.submitRequest(event,'penarikan')">
-              <div class="field-group">
-                <label class="field-label">Jenis Simpanan yang Ditarik</label>
-                <select id="req-tarik-jenis" required>
-                  <option value="Sukarela">Simpanan Sukarela</option>
-                  <option value="Pokok">Simpanan Pokok</option>
-                </select>
-              </div>
-              <div class="field-group">
-                <label class="field-label">Nominal yang Diajukan (Rp)</label>
-                <input type="number" id="req-tarik-nom" required placeholder="Contoh: 500000">
+              <div class="form-row form-col-2">
+                <div class="field-group">
+                  <label class="field-label">Jenis Simpanan</label>
+                  <select id="req-tarik-jenis" required>
+                    <option value="Sukarela">Simpanan Sukarela</option>
+                    <option value="Pokok">Simpanan Pokok</option>
+                  </select>
+                </div>
+                <div class="field-group">
+                  <label class="field-label">Nominal (Rp)</label>
+                  <input type="number" id="req-tarik-nom" required placeholder="Contoh: 500000">
+                </div>
               </div>
               <div class="field-group">
                 <label class="field-label">Alasan / Keterangan</label>
                 <textarea id="req-tarik-ket" rows="2" required placeholder="Contoh: keperluan biaya sekolah"></textarea>
               </div>
-              <button class="btn btn-warning w-full" type="submit"><i data-lucide="send"></i> Kirim Pengajuan</button>
+              <button class="btn btn-warning w-full" type="submit">
+                <i data-lucide="send"></i> Kirim Pengajuan
+              </button>
             </form>
           </div>
+        </div>
 
-          <!-- Pengajuan Ubah Rekening -->
+        <!-- Panel Ubah Rekening (hidden default) -->
+        <div id="panel-rekening" class="hidden" style="margin-bottom:1rem;">
           <div class="card">
             <div class="card-header"><span class="card-title">Ajukan Perubahan Rekening</span></div>
             <div style="background:var(--info-light);border-radius:var(--radius-md);padding:.75rem .9rem;margin-bottom:.9rem;font-size:.78rem;color:#075985;">
-              <b>Catatan:</b> Perubahan data rekening akan diverifikasi oleh admin sebelum diterapkan.
+              <b>Catatan:</b> Perubahan data rekening diverifikasi admin sebelum diterapkan.
             </div>
             <form onsubmit="Member.submitRequest(event,'ubah_rekening')">
               <div class="form-row form-col-2">
-                <div class="field-group"><label class="field-label">Nama Bank Baru</label><input type="text" id="req-rek-bank" required placeholder="Contoh: BRI"></div>
-                <div class="field-group"><label class="field-label">No. Rekening Baru</label><input type="text" id="req-rek-no" required placeholder="Contoh: 1234567890"></div>
+                <div class="field-group"><label class="field-label">Nama Bank Baru</label>
+                  <input type="text" id="req-rek-bank" placeholder="Contoh: BRI"></div>
+                <div class="field-group"><label class="field-label">No. Rekening Baru</label>
+                  <input type="text" id="req-rek-no" placeholder="Contoh: 1234567890"></div>
               </div>
               <div class="field-group">
                 <label class="field-label">Nama Pemilik Rekening</label>
@@ -1187,7 +1226,9 @@ label.field-label {
                 <label class="field-label">Alasan Perubahan</label>
                 <textarea id="req-rek-ket" rows="2" placeholder="Contoh: ganti bank, rekening lama ditutup"></textarea>
               </div>
-              <button class="btn btn-info w-full" type="submit"><i data-lucide="send"></i> Kirim Pengajuan</button>
+              <button class="btn btn-info w-full" type="submit">
+                <i data-lucide="send"></i> Kirim Pengajuan
+              </button>
             </form>
           </div>
         </div>
@@ -1928,8 +1969,11 @@ const UI = {
     document.getElementById('sb-avatar').textContent = (S.user.username||'A')[0].toUpperCase();
     this.applyFeatures();
     AdminReq.updateBadge();
-    if (role === 'anggota') Nav.go('member-home', null);
-    else Nav.go('dashboard', document.querySelector('[onclick*="dashboard"]'));
+    if (role === 'anggota') {
+      Nav.go('member-home', document.getElementById('nav-member-home'));
+    } else {
+      Nav.go('dashboard', document.querySelector('[onclick*="dashboard"]'));
+    }
   },
   applyFeatures() {
     if (!S.user) return;
@@ -1983,16 +2027,38 @@ const Nav = {
     document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
     const page = document.getElementById('page-' + id);
     if (page) page.classList.add('active');
-    if (el) el.classList.add('active');
-    document.getElementById('page-title').textContent = id.replace(/-/g,' ').replace(/\b\w/g,c=>c.toUpperCase());
-    document.getElementById('print-date').textContent = new Date().toLocaleDateString('id-ID',{year:'numeric',month:'long',day:'numeric'});
+    // Aktifkan nav-item: el jika dikirim, atau fallback cari by ID
+    if (el) {
+      el.classList.add('active');
+    } else {
+      const byId = document.getElementById('nav-' + id);
+      if (byId) byId.classList.add('active');
+    }
+    // Judul halaman yang ramah
+    const _titles = {
+      'member-home':'Dasbor Saya','member-riwayat':'Riwayat Transaksi',
+      'member-request':'Pengajuan','member-profil':'Profil & Password',
+      'requests':'Kelola Request','dashboard':'Dashboard',
+      'anggota':'Data Anggota','simpanan':'Simpanan','kas':'Kas & Bank',
+      'modal':'Modal & ROI','pinjaman':'Pinjaman','stok':'Stok Barang',
+      'shu':'Estimasi SHU','laporan':'Ekspor & Cetak',
+      'users':'Kelola User','settings':'Pengaturan',
+    };
+    document.getElementById('page-title').textContent =
+      _titles[id] || id.replace(/-/g,' ').replace(/\w/g, c => c.toUpperCase());
+    document.getElementById('print-date').textContent =
+      new Date().toLocaleDateString('id-ID',{year:'numeric',month:'long',day:'numeric'});
     if (id === 'member-home')    Member.renderHome();
     if (id === 'member-riwayat') Member.renderRiwayat();
     if (id === 'member-request') Member.renderRequest();
     if (id === 'member-profil')  Member.renderProfil();
     if (id === 'requests')       AdminReq.render();
-    if (id === 'settings') {     Pengumuman.renderAdmin(); }
-    if (id === 'settings') { Features.fetchBackups(); this._loadConnSettings(); Protection.loadDomains(); }
+    if (id === 'settings') {
+      Pengumuman.renderAdmin();
+      Features.fetchBackups();
+      this._loadConnSettings();
+      Protection.loadDomains();
+    }
     Render.all();
   },
   _loadConnSettings() {
@@ -2690,6 +2756,14 @@ const Member = {
   // Render halaman request anggota
   renderRequest() {
     if (!S.user || S.user.role !== 'anggota') return;
+    // Pastikan tab default (penarikan) aktif saat pertama buka
+    const pPanel = document.getElementById('panel-penarikan');
+    const rPanel = document.getElementById('panel-rekening');
+    if (pPanel && rPanel) {
+      // Jika kedua panel hidden atau keduanya visible, reset ke penarikan
+      const bothHidden = pPanel.classList.contains('hidden') && rPanel.classList.contains('hidden');
+      if (bothHidden) this.switchTab('penarikan');
+    }
     const id = S.user.id;
     const myReqs = (S.requests || [])
       .filter(r => r.angId == id)
@@ -2711,8 +2785,12 @@ const Member = {
   // Render halaman profil
   renderProfil() {
     if (!S.user || S.user.role !== 'anggota') return;
-    const ang = S.anggota.find(a => a.id == S.user.id);
-    if (!ang) return;
+    const ang = S.anggota.find(a => String(a.id) === String(S.user.id));
+    if (!ang) {
+      const el = document.getElementById('m-profil-detail');
+      if (el) el.innerHTML = '<div style="color:var(--gray-400);padding:1rem;">Data profil tidak ditemukan. Hubungi admin.</div>';
+      return;
+    }
     const el = document.getElementById('m-profil-detail');
     if (el) el.innerHTML = [
       ['Nama',        ang.nama],
@@ -2742,13 +2820,18 @@ const Member = {
       const jenis = document.getElementById('req-tarik-jenis').value;
       const nom   = +document.getElementById('req-tarik-nom').value;
       const ket   = document.getElementById('req-tarik-ket').value;
+      if (!nom || nom <= 0) return UI.toast('Masukkan nominal yang valid', 'warn');
+      if (!ket.trim())      return UI.toast('Isi alasan penarikan', 'warn');
       detail = `${jenis} — ${UI.fmt(nom)} — "${ket}"`;
       data = { jenis, nom, ket };
     } else {
-      const bank  = document.getElementById('req-rek-bank').value;
-      const noRek = document.getElementById('req-rek-no').value;
-      const nama  = document.getElementById('req-rek-nama').value;
+      const bank  = document.getElementById('req-rek-bank').value.trim();
+      const noRek = document.getElementById('req-rek-no').value.trim();
+      const nama  = document.getElementById('req-rek-nama').value.trim();
       const ket   = document.getElementById('req-rek-ket').value;
+      if (!bank)  return UI.toast('Masukkan nama bank', 'warn');
+      if (!noRek) return UI.toast('Masukkan nomor rekening', 'warn');
+      if (!nama)  return UI.toast('Masukkan nama pemilik rekening', 'warn');
       detail = `${bank} ${noRek} a/n ${nama}`;
       data = { bank, noRek, nama, ket };
     }
@@ -2784,37 +2867,82 @@ const Member = {
 
   // Ganti password
   gantiPassword(e) {
-    e.preventDefault();
-    const lama    = document.getElementById('m-pass-lama').value;
-    const baru    = document.getElementById('m-pass-baru').value;
-    const konfirm = document.getElementById('m-pass-konfirm').value;
+    if (e && e.preventDefault) e.preventDefault();
 
-    const ang = S.anggota.find(a => a.id == S.user.id);
-    if (!ang) return;
+    const lama    = document.getElementById('m-pass-lama')?.value || '';
+    const baru    = document.getElementById('m-pass-baru')?.value || '';
+    const konfirm = document.getElementById('m-pass-konfirm')?.value || '';
 
-    const passLama = ang.login_password || ang.nik;
+    if (!S.user) return UI.toast('Sesi tidak valid, silakan login ulang', 'danger');
+
+    // Cari data anggota yang sedang login
+    const ang = S.anggota.find(a => String(a.id) === String(S.user.id));
+    if (!ang) return UI.toast('Data anggota tidak ditemukan', 'danger');
+
+    // Validasi password lama: cek login_password, fallback ke nik
+    const passLama = ang.login_password || ang.nik || '';
+    if (!lama)           return UI.toast('Masukkan password lama', 'warn');
     if (lama !== passLama) return UI.toast('Password lama salah', 'danger');
-    if (baru.length < 6)   return UI.toast('Password baru minimal 6 karakter', 'warn');
-    if (baru !== konfirm)  return UI.toast('Konfirmasi password tidak cocok', 'danger');
+    if (baru.length < 6) return UI.toast('Password baru minimal 6 karakter', 'warn');
+    if (baru !== konfirm) return UI.toast('Konfirmasi password tidak cocok', 'danger');
+    if (baru === lama)   return UI.toast('Password baru harus berbeda dari yang lama', 'warn');
 
+    // Simpan password baru
     ang.login_password = baru;
-    // Update session juga
+
+    // Update session agar tidak logout
     S.user = { ...S.user };
     sessionStorage.setItem('sikop_user', JSON.stringify(S.user));
 
     DB.push();
-    e.target.reset();
-    UI.toast('Password berhasil diubah!');
+    if (e && e.target) e.target.reset();
+    UI.toast('Password berhasil diubah! ✓');
   },
 
-  // Buka request dari tombol aksi cepat di dasbor
-  openRequest(tipe) {
-    Nav.go('member-request', document.querySelector('[onclick*="member-request"]'));
+  // Switch tab di halaman request
+  switchTab(tipe) {
+    const isPenarikan = tipe === 'penarikan';
+    // Panel visibility
+    const pPanel = document.getElementById('panel-penarikan');
+    const rPanel = document.getElementById('panel-rekening');
+    if (pPanel) pPanel.classList.toggle('hidden', !isPenarikan);
+    if (rPanel) rPanel.classList.toggle('hidden', isPenarikan);
+    // Tab button state
+    const tPeraikan = document.getElementById('tab-penarikan');
+    const tRekening = document.getElementById('tab-rekening');
+    if (tPeraikan) {
+      tPeraikan.className = isPenarikan
+        ? 'btn btn-primary btn-sm' : 'btn btn-ghost btn-sm';
+    }
+    if (tRekening) {
+      tRekening.className = !isPenarikan
+        ? 'btn btn-primary btn-sm' : 'btn btn-ghost btn-sm';
+    }
+    // Sidebar active state
+    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+    const navEl = document.getElementById(
+      isPenarikan ? 'nav-member-penarikan' : 'nav-member-rekening'
+    );
+    if (navEl) navEl.classList.add('active');
+    // Fokus field pertama
     setTimeout(() => {
-      if (tipe === 'penarikan') document.getElementById('req-tarik-jenis')?.focus();
-      else document.getElementById('req-rek-bank')?.focus();
-    }, 200);
+      const target = isPenarikan
+        ? document.getElementById('req-tarik-nom')
+        : document.getElementById('req-rek-bank');
+      if (target) target.focus();
+    }, 100);
   },
+
+  // Navigasi ke halaman request dan buka tab yang sesuai
+  goRequest(tipe) {
+    const navEl = document.getElementById(
+      tipe === 'penarikan' ? 'nav-member-penarikan' : 'nav-member-rekening'
+    );
+    Nav.go('member-request', navEl);
+    setTimeout(() => this.switchTab(tipe), 50);
+  },
+  // Alias
+  openRequest(tipe) { this.goRequest(tipe); },
 };
 
 // ============================================================
